@@ -1,0 +1,33 @@
+/* Main app styles */
+
+/* Optimize React Flow dragging performance */
+.react-flow__node {
+  transition: none !important;
+}
+
+.react-flow__node-task {
+  cursor: grab !important;
+}
+
+.react-flow__node-task.dragging,
+.react-flow__node-task:active {
+  cursor: grabbing !important;
+  z-index: 1000 !important;
+}
+
+/* Smooth dragging with crisp rendering */
+.react-flow__node {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.react-flow__node.dragging {
+  will-change: transform;
+}
+
+/* Optimize selection */
+.react-flow__node.selected {
+  outline: none !important;
+}
