@@ -70,7 +70,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ task, on
     if (newItemType === 'subtask') {
       addSubtask(task.id, newItemTitle.trim());
     } else {
-      const date = newMilestoneDate ? new Date(newMilestoneDate) : undefined;
+      const date = newMilestoneDate ? new Date(newMilestoneDate) : new Date();
       addMilestone(task.id, newItemTitle.trim(), date);
     }
     
@@ -82,7 +82,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ task, on
     setDraggedIndex(index);
   };
 
-  const handleDragOver = (e: React.DragEvent, index: number) => {
+  const handleDragOver = (e: React.DragEvent, _index: number) => {
     e.preventDefault();
   };
 

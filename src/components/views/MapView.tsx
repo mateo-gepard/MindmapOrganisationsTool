@@ -101,7 +101,7 @@ export const MapView: React.FC = () => {
 
   // Initialize nodes and edges with React Flow hooks
   const [nodes, setNodes, onNodesChange] = useNodesState(allNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [edges, , onEdgesChange] = useEdgesState([]);
 
   // Update nodes when allNodes changes
   React.useEffect(() => {
