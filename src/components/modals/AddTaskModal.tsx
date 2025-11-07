@@ -47,15 +47,21 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose }) => {
         ? { x: firstArea.position.x - 30, y: firstArea.position.y - 30 }
         : { x: 400, y: 300 };
 
-      await addTask({
+      const taskData: any = {
         title: title.trim(),
         type,
         priority,
         areas: selectedAreas,
         position,
         isHybrid: selectedAreas.length > 1,
-        dueDate: dueDate ? new Date(dueDate) : undefined,
-      });
+      };
+
+      // Only add dueDate if it has a value
+      if (dueDate) {
+        taskData.dueDate = new Date(dueDate);
+      }
+
+      await addTask(taskData);
 
       onClose();
     } catch (error) {

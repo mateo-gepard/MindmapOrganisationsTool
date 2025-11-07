@@ -53,7 +53,13 @@ export const firestoreTasks = {
   add: async (task: Omit<Task, 'id'>) => {
     const userId = getCurrentUserId();
     const taskWithUser = { ...task, userId };
-    const docRef = await addDoc(collection(db, TASKS_COLLECTION), taskWithUser);
+    
+    // Filter out undefined values to prevent Firebase errors
+    const cleanTask = Object.fromEntries(
+      Object.entries(taskWithUser).filter(([_, value]) => value !== undefined)
+    );
+    
+    const docRef = await addDoc(collection(db, TASKS_COLLECTION), cleanTask);
     return docRef.id;
   },
 

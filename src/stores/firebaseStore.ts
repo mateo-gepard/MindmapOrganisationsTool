@@ -125,11 +125,23 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   // Firebase-enabled task operations
   addTask: async (taskData) => {
-    const newTask: Omit<Task, 'id'> = {
-      ...taskData,
-      createdAt: new Date(),
+    const newTask: any = {
+      title: taskData.title,
+      type: taskData.type,
+      priority: taskData.priority,
+      areas: taskData.areas,
+      position: taskData.position,
       isHybrid: taskData.areas.length > 1,
+      createdAt: new Date(),
     };
+
+    // Only add optional fields if they have values
+    if (taskData.dueDate) {
+      newTask.dueDate = taskData.dueDate;
+    }
+    if (taskData.completedAt) {
+      newTask.completedAt = taskData.completedAt;
+    }
 
     try {
       const taskId = await firestoreTasks.add(newTask);
