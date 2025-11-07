@@ -39,6 +39,16 @@ export const D3MapView: React.FC = () => {
     // Clear previous content
     svg.selectAll('*').remove();
 
+    // Add CSS for smooth transitions
+    svg.append('defs').append('style').text(`
+      .task {
+        transition: transform 0.05s ease-out;
+      }
+      .task:hover {
+        filter: brightness(1.1);
+      }
+    `);
+
     // Create main group with zoom behavior
     const g = svg.append('g');
 
@@ -89,23 +99,23 @@ export const D3MapView: React.FC = () => {
         const pos = d.position || { x: width / 2, y: height / 2 };
         return `translate(${pos.x}, ${pos.y})`;
       })
-      .style('cursor', 'pointer')
+      .style('cursor', 'grab')
       .call(d3.drag<SVGGElement, Task>()
         .on('start', function() {
-          d3.select(this).raise();
+          d3.select(this).raise().style('cursor', 'grabbing');
         })
         .on('drag', function(event) {
-          const x = event.x;
-          const y = event.y;
-          d3.select(this).attr('transform', `translate(${x}, ${y})`);
+          d3.select(this)
+            .attr('transform', `translate(${event.x}, ${event.y})`);
         })
         .on('end', function(event, d) {
+          d3.select(this).style('cursor', 'grab');
           const x = event.x;
           const y = event.y;
           
           // Update position
           const position = { x, y };
-          const newAreas = getAreasForPosition({ x: x + 30, y: y + 30 }, areas);
+          const newAreas = getAreasForPosition({ x: x + 40, y: y + 40 }, areas);
 
           if (newAreas.length > 0) {
             updateTask(d.id, {
@@ -125,9 +135,21 @@ export const D3MapView: React.FC = () => {
         }
       });
 
+    // Task shadow (for depth effect)
+    taskGroups.append('ellipse')
+      .attr('cx', 40)
+      .attr('cy', 40)
+      .attr('rx', 38)
+      .attr('ry', 38)
+      .attr('fill', '#000')
+      .attr('opacity', 0.1)
+      .attr('transform', 'translate(3, 5)');
+
     // Task circles with gradient backgrounds
     taskGroups.append('circle')
-      .attr('r', 30)
+      .attr('cx', 40)
+      .attr('cy', 40)
+      .attr('r', 40)
       .attr('fill', d => {
         if (d.completedAt) return '#d1d5db';
         switch (d.priority) {
@@ -137,17 +159,21 @@ export const D3MapView: React.FC = () => {
           default: return '#669bbc';
         }
       })
-      .attr('opacity', d => d.completedAt ? 0.5 : 0.9)
+      .attr('opacity', d => d.completedAt ? 0.5 : 1)
       .attr('stroke', '#fff')
-      .attr('stroke-width', 2)
-      .style('filter', 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))');
+      .attr('stroke-width', 3)
+      .style('filter', 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.15))');
 
     // Task type icon
     taskGroups.append('text')
+      .attr('x', 40)
+      .attr('y', 40)
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'middle')
-      .attr('font-size', '20px')
+      .attr('font-size', '24px')
+      .attr('font-weight', 'bold')
       .attr('fill', '#fff')
+      .style('pointer-events', 'none')
       .text(d => {
         if (d.completedAt) return '✓';
         switch (d.type) {
@@ -155,6 +181,25 @@ export const D3MapView: React.FC = () => {
           case 'one-time': return '□';
           case 'large': return '△';
           default: return '●';
+        }
+      });
+
+    // Task title label below pin
+    taskGroups.append('text')
+      .attr('x', 40)
+      .attr('y', 95)
+      .attr('text-anchor', 'middle')
+      .attr('font-size', '12px')
+      .attr('font-weight', '600')
+      .attr('fill', '#374151')
+      .style('pointer-events', 'none')
+      .each(function(d) {
+        const text = d3.select(this);
+        const words = d.title.split(' ');
+        if (words.length > 2) {
+          text.text(words.slice(0, 2).join(' ') + '...');
+        } else {
+          text.text(d.title);
         }
       });
 
