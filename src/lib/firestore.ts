@@ -66,7 +66,14 @@ export const firestoreTasks = {
   // Update task
   update: async (id: string, updates: Partial<Task>) => {
     const taskRef = doc(db, TASKS_COLLECTION, id);
-    await updateDoc(taskRef, updates);
+    // Filter out undefined values to prevent Firebase errors
+    const cleanUpdates = Object.fromEntries(
+      Object.entries(updates as Record<string, any>).filter(([_, value]) => value !== undefined)
+    );
+
+    if (Object.keys(cleanUpdates).length > 0) {
+      await updateDoc(taskRef, cleanUpdates);
+    }
   },
 
   // Delete task
