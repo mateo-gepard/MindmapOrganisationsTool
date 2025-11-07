@@ -49,6 +49,7 @@ const TaskNode = ({ data }: { data: any }) => {
   return <TaskPin task={data.task} />;
 };
 
+// Memoize nodeTypes outside component to prevent React Flow warnings
 const nodeTypes: NodeTypes = {
   area: AreaNode,
   task: TaskNode,

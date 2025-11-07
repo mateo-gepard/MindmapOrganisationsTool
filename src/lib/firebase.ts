@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 // Firebase configuration using environment variables
@@ -12,11 +12,44 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
+// Debug: Log configuration (without sensitive data)
+console.log('Firebase Config:', {
+  projectId: firebaseConfig.projectId,
+  authDomain: firebaseConfig.authDomain,
+  apiKeyPresent: !!firebaseConfig.apiKey,
+  appIdPresent: !!firebaseConfig.appId
+});
+
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+let app;
+try {
+  app = initializeApp(firebaseConfig);
+  console.log('Firebase app initialized successfully');
+} catch (error) {
+  console.error('Error initializing Firebase app:', error);
+  throw error;
+}
 
 // Initialize Firestore
-export const db = getFirestore(app);
+export const db = (() => {
+  try {
+    const firestore = getFirestore(app);
+    console.log('Firestore initialized successfully');
+    return firestore;
+  } catch (error) {
+    console.error('Error initializing Firestore:', error);
+    throw error;
+  }
+})();
 
 // Initialize Auth
-export const auth = getAuth(app);
+export const auth = (() => {
+  try {
+    const firebaseAuth = getAuth(app);
+    console.log('Firebase Auth initialized successfully');
+    return firebaseAuth;
+  } catch (error) {
+    console.error('Error initializing Firebase Auth:', error);
+    throw error;
+  }
+})();

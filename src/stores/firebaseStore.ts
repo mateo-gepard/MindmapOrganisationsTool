@@ -326,26 +326,37 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   // Initialize Firebase listeners
   initializeFirebase: () => {
-    // Initialize user data
-    firestoreUserData.initialize();
+    try {
+      console.log('Initializing Firebase connections...');
+      
+      // Initialize user data
+      firestoreUserData.initialize().catch(console.error);
 
-    // Subscribe to tasks
-    firestoreTasks.subscribe((tasks) => {
-      set({ tasks });
-    });
-
-    // Subscribe to task details
-    firestoreTaskDetails.subscribe((details) => {
-      const taskDetailsMap = new Map();
-      Object.entries(details).forEach(([taskId, detail]) => {
-        taskDetailsMap.set(taskId, detail);
+      // Subscribe to tasks
+      firestoreTasks.subscribe((tasks) => {
+        console.log(`Received ${tasks.length} tasks from Firebase`);
+        set({ tasks });
       });
-      set({ taskDetails: taskDetailsMap });
-    });
 
-    // Subscribe to user data (daily todos)
-    firestoreUserData.subscribe((data) => {
-      set({ dailyTodos: data.dailyTodos });
-    });
-  },
+      // Subscribe to task details
+      firestoreTaskDetails.subscribe((details) => {
+        const taskDetailsMap = new Map();
+        Object.entries(details).forEach(([taskId, detail]) => {
+          taskDetailsMap.set(taskId, detail);
+        });
+        console.log(`Received ${taskDetailsMap.size} task details from Firebase`);
+        set({ taskDetails: taskDetailsMap });
+      });
+
+      // Subscribe to user data (daily todos)
+      firestoreUserData.subscribe((data) => {
+        console.log(`Received daily todos: ${data.dailyTodos.length} items`);
+        set({ dailyTodos: data.dailyTodos });
+      });
+      
+      console.log('Firebase initialization completed successfully');
+    } catch (error) {
+      console.error('Error initializing Firebase:', error);
+    }
+  }
 }));

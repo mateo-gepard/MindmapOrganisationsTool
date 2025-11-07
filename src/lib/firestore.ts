@@ -3,7 +3,8 @@ import {
   doc, 
   getDocs, 
   addDoc, 
-  updateDoc, 
+  updateDoc,
+  setDoc,
   deleteDoc, 
   onSnapshot,
   query,
@@ -40,13 +41,21 @@ export const firestoreTasks = {
       orderBy('createdAt', 'desc')
     );
     
-    return onSnapshot(q, (snapshot) => {
-      const tasks = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Task[];
-      callback(tasks);
-    });
+    return onSnapshot(q, 
+      (snapshot) => {
+        const tasks = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Task[];
+        console.log(`Firebase: Loaded ${tasks.length} tasks`);
+        callback(tasks);
+      },
+      (error) => {
+        console.error('Firebase tasks subscription error:', error);
+        // Provide empty array on error to prevent app crash
+        callback([]);
+      }
+    );
   },
 
   // Add new task
@@ -143,7 +152,12 @@ export const firestoreUserData = {
   updateDailyTodos: async (dailyTodos: string[]) => {
     const userId = getCurrentUserId();
     const docRef = doc(db, USER_DATA_COLLECTION, userId);
-    await updateDoc(docRef, { dailyTodos });
+    try {
+      await setDoc(docRef, { dailyTodos }, { merge: true });
+      console.log(`Updated daily todos: ${dailyTodos.length} items`);
+    } catch (error) {
+      console.error('Error updating daily todos:', error);
+    }
   },
 
   // Initialize user data document if it doesn't exist
@@ -152,14 +166,14 @@ export const firestoreUserData = {
     const docRef = doc(db, USER_DATA_COLLECTION, userId);
     
     try {
-      await updateDoc(docRef, { lastAccess: new Date() });
+      // Use setDoc with merge to create or update the document
+      await setDoc(docRef, { 
+        lastAccess: new Date(),
+        dailyTodos: []
+      }, { merge: true });
+      console.log('User data initialized successfully');
     } catch (error) {
-      // Document doesn't exist, create it
-      await addDoc(collection(db, USER_DATA_COLLECTION), {
-        userId,
-        dailyTodos: [],
-        createdAt: new Date(),
-      });
+      console.error('Error initializing user data:', error);
     }
   },
 };
