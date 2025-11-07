@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAppStore } from './stores/firebaseStore';
-import { D3MapView } from './components/views/D3MapView';
+import { MapView } from './components/views/MapView';
 import { WhiteboardView } from './components/views/WhiteboardView';
 import { CalendarView } from './components/views/CalendarView';
 import { DailyView } from './components/views/DailyView';
@@ -100,7 +100,7 @@ function App() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-hidden">
-        {currentView === 'map' && <D3MapView />}
+        {currentView === 'map' && <MapView />}
         {currentView === 'whiteboard' && <WhiteboardView />}
         {currentView === 'calendar' && <CalendarView />}
         {currentView === 'daily' && <DailyView />}
