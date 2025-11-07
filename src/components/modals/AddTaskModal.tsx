@@ -207,13 +207,13 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose }) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
+              className="flex-1 px-6 py-3 bg-cream text-navy border-2 border-navy/20 rounded-lg hover:bg-navy hover:text-white font-medium transition-all hover:scale-105"
             >
               Abbrechen
             </button>
             <button
               type="submit"
-              className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-blue to-navy text-white rounded-lg hover:shadow-lg hover:shadow-blue/30 font-medium transition-all hover:scale-105"
             >
               Aufgabe erstellen
             </button>
