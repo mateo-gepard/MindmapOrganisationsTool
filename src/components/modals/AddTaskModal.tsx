@@ -26,7 +26,9 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose }) => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!title.trim()) {
@@ -34,23 +36,34 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose }) => {
       return;
     }
 
-    // Find the first selected area to get initial position
-    const firstArea = areas.find((a) => a.id === selectedAreas[0]);
-    const position = firstArea
-      ? { x: firstArea.position.x - 30, y: firstArea.position.y - 30 }
-      : { x: 400, y: 300 };
+    if (isSubmitting) return; // Prevent double submission
+    
+    setIsSubmitting(true);
 
-    addTask({
-      title: title.trim(),
-      type,
-      priority,
-      areas: selectedAreas,
-      position,
-      isHybrid: selectedAreas.length > 1,
-      dueDate: dueDate ? new Date(dueDate) : undefined,
-    });
+    try {
+      // Find the first selected area to get initial position
+      const firstArea = areas.find((a) => a.id === selectedAreas[0]);
+      const position = firstArea
+        ? { x: firstArea.position.x - 30, y: firstArea.position.y - 30 }
+        : { x: 400, y: 300 };
 
-    onClose();
+      await addTask({
+        title: title.trim(),
+        type,
+        priority,
+        areas: selectedAreas,
+        position,
+        isHybrid: selectedAreas.length > 1,
+        dueDate: dueDate ? new Date(dueDate) : undefined,
+      });
+
+      onClose();
+    } catch (error) {
+      console.error('Error creating task:', error);
+      alert('Fehler beim Erstellen der Aufgabe. Bitte versuche es erneut.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -213,9 +226,14 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose }) => {
             </button>
             <button
               type="submit"
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-blue to-navy text-white rounded-lg hover:shadow-lg hover:shadow-blue/30 font-medium transition-all hover:scale-105"
+              disabled={isSubmitting}
+              className={`flex-1 px-6 py-3 rounded-lg font-medium transition-all ${
+                isSubmitting
+                  ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-blue to-navy text-white hover:shadow-lg hover:shadow-blue/30 hover:scale-105'
+              }`}
             >
-              Aufgabe erstellen
+              {isSubmitting ? 'Wird erstellt...' : 'Aufgabe erstellen'}
             </button>
           </div>
         </form>
