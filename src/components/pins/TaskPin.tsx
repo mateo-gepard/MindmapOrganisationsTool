@@ -71,7 +71,15 @@ export const TaskPin: React.FC<PinProps> = ({ task }) => {
   }, [task.id]);
 
   return (
-    <div className="flex flex-col items-center cursor-grab active:cursor-grabbing group" style={{ transform: 'translateZ(0)' }}>
+    <div 
+      className="flex flex-col items-center cursor-grab active:cursor-grabbing group select-none" 
+      style={{ 
+        transform: 'translateZ(0)',
+        willChange: 'transform',
+        backfaceVisibility: 'hidden',
+        perspective: '1000px'
+      }}
+    >
       {/* Small circle pin */}
       <div className="relative">
         <div
@@ -79,13 +87,15 @@ export const TaskPin: React.FC<PinProps> = ({ task }) => {
             task.type
           )} ${getPriorityBorder(task.priority)} shadow-md ${
             isDragging 
-              ? 'scale-125 shadow-2xl transition-none' 
-              : 'group-hover:scale-110 group-hover:shadow-lg transition-transform duration-150'
+              ? 'scale-125 shadow-2xl' 
+              : 'group-hover:scale-110 group-hover:shadow-lg transition-transform duration-200 ease-out'
           }`}
           style={{ 
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
-            transform: 'translate3d(0, 0, 0)'
+            transform: 'translate3d(0, 0, 0)',
+            willChange: isDragging ? 'transform' : 'auto',
+            transition: isDragging ? 'none' : 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
           }}
         />
       </div>
@@ -93,11 +103,13 @@ export const TaskPin: React.FC<PinProps> = ({ task }) => {
       {/* Always visible compact label */}
       <div 
         className={`mt-1.5 text-[9px] leading-tight text-center font-medium text-orange line-clamp-2 px-0.5 max-w-[90px] ${
-          isDragging ? 'opacity-50 transition-none' : 'opacity-100 transition-opacity duration-150'
+          isDragging ? 'opacity-50' : 'opacity-100 transition-opacity duration-150'
         }`}
         style={{ 
           backfaceVisibility: 'hidden',
-          WebkitBackfaceVisibility: 'hidden'
+          WebkitBackfaceVisibility: 'hidden',
+          transform: 'translate3d(0, 0, 0)',
+          willChange: isDragging ? 'opacity' : 'auto'
         }}
       >
         {task.title}

@@ -1,33 +1,73 @@
 /* Main app styles */
 
-/* Optimize React Flow dragging performance */
+/* Optimize React Flow for ultra-smooth performance */
+.react-flow {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+.react-flow__viewport {
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Optimize node rendering and dragging */
 .react-flow__node {
   transition: none !important;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .react-flow__node-task {
   cursor: grab !important;
+  will-change: transform;
 }
 
 .react-flow__node-task.dragging,
 .react-flow__node-task:active {
   cursor: grabbing !important;
   z-index: 1000 !important;
-}
-
-/* Smooth dragging with crisp rendering */
-.react-flow__node {
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  will-change: transform;
 }
 
 .react-flow__node.dragging {
   will-change: transform;
+  transition: none !important;
 }
 
 /* Optimize selection */
 .react-flow__node.selected {
   outline: none !important;
+}
+
+/* Smooth panning and zooming */
+.react-flow__pane {
+  cursor: grab;
+  will-change: transform;
+}
+
+.react-flow__pane:active {
+  cursor: grabbing;
+}
+
+/* Hardware acceleration for smooth animations */
+.task-pin-smooth {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.task-pin-smooth.dragging {
+  will-change: transform;
+  transition: none;
 }

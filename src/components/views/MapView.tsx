@@ -108,11 +108,11 @@ export const MapView: React.FC = () => {
     setNodes(allNodes);
   }, [allNodes, setNodes]);
 
-  // Handle node drag - update position in real-time for better reactivity
+  // Handle node drag - optimized for smooth dragging
   const onNodeDrag = useCallback(
     (_event: any, node: Node) => {
       if (node.type === 'task') {
-        // Update node immediately for smooth dragging
+        // Update node position immediately for ultra-smooth dragging
         setNodes((nds) =>
           nds.map((n) =>
             n.id === node.id
@@ -189,13 +189,19 @@ export const MapView: React.FC = () => {
         nodesDraggable={true}
         elementsSelectable={true}
         zoomOnScroll={true}
+        zoomOnPinch={true}
+        zoomOnDoubleClick={false}
         panOnScroll={false}
         panOnDrag={true}
         preventScrolling={true}
         nodesFocusable={false}
         edgesFocusable={false}
-        autoPanOnNodeDrag={true}
+        autoPanOnNodeDrag={false}
         autoPanOnConnect={false}
+        snapGrid={[10, 10]}
+        snapToGrid={false}
+        translateExtent={[[-2000, -2000], [2000, 2000]]}
+        nodeExtent={[[-1500, -1500], [1500, 1500]]}
       >
         <Background color="#d1d5db" gap={20} size={1} />
         <Controls />

@@ -14,18 +14,7 @@ function App() {
     initializeFirebase();
   }, [initializeFirebase]);
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === '1') setCurrentView('map');
-      if (e.key === '2') setCurrentView('whiteboard');
-      if (e.key === '3') setCurrentView('calendar');
-      if (e.key === '4') setCurrentView('daily');
-    };
 
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [setCurrentView]);
 
   return (
     <div className="w-screen h-screen flex flex-col bg-gradient-to-br from-cream via-blue/20 to-cream/30">
@@ -50,7 +39,6 @@ function App() {
             }`}
           >
             Map
-            <span className="ml-2 text-xs opacity-75">[1]</span>
           </button>
 
           <button
@@ -62,7 +50,6 @@ function App() {
             }`}
           >
             Board
-            <span className="ml-2 text-xs opacity-75">[2]</span>
           </button>
 
           <button
@@ -74,7 +61,6 @@ function App() {
             }`}
           >
             Kalender
-            <span className="ml-2 text-xs opacity-75">[3]</span>
           </button>
 
           <button
@@ -86,7 +72,6 @@ function App() {
             }`}
           >
             Daily
-            <span className="ml-2 text-xs opacity-75">[4]</span>
           </button>
         </div>
       </nav>
