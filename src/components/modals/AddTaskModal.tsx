@@ -93,36 +93,33 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose }) => {
                 onClick={() => setType('repetitive')}
                 className={`px-4 py-3 rounded-lg border-2 transition-all ${
                   type === 'repetitive'
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                    ? 'border-navy bg-navy/10 text-navy'
                     : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
                 }`}
               >
                 <div className="font-medium">Wiederkehrend</div>
-                <div className="text-xs mt-1">⟳</div>
               </button>
               <button
                 type="button"
                 onClick={() => setType('one-time')}
                 className={`px-4 py-3 rounded-lg border-2 transition-all ${
                   type === 'one-time'
-                    ? 'border-green-500 bg-green-50 text-green-700'
+                    ? 'border-blue bg-blue/10 text-blue'
                     : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
                 }`}
               >
                 <div className="font-medium">Einmalig</div>
-                <div className="text-xs mt-1">□</div>
               </button>
               <button
                 type="button"
                 onClick={() => setType('large')}
                 className={`px-4 py-3 rounded-lg border-2 transition-all ${
                   type === 'large'
-                    ? 'border-purple-500 bg-purple-50 text-purple-700'
+                    ? 'border-crimson bg-crimson/10 text-crimson'
                     : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
                 }`}
               >
                 <div className="font-medium">Projekt</div>
-                <div className="text-xs mt-1">△</div>
               </button>
             </div>
           </div>
@@ -174,17 +171,15 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose }) => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Bereiche * (mindestens einer)
             </label>
-            <div className="grid grid-cols-3 gap-3">
-              {areas
-                .filter((area) => area.id !== 'leisure')
-                .map((area) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {areas.map((area) => (
                   <button
                     key={area.id}
                     type="button"
                     onClick={() => toggleArea(area.id)}
                     className={`px-4 py-3 rounded-lg border-2 transition-all ${
                       selectedAreas.includes(area.id)
-                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        ? 'border-blue bg-blue/10 text-blue'
                         : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
                     }`}
                   >
