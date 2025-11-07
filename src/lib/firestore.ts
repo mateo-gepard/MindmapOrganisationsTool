@@ -41,17 +41,36 @@ export const firestoreTasks = {
       orderBy('createdAt', 'desc')
     );
     
+    console.log('🔄 Firebase: Starting real-time task subscription...');
+    
     return onSnapshot(q, 
       (snapshot) => {
         const tasks = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         })) as Task[];
-        console.log(`Firebase: Loaded ${tasks.length} tasks`);
+        
+        // Log what changed
+        const changes = snapshot.docChanges();
+        if (changes.length > 0) {
+          changes.forEach((change) => {
+            if (change.type === 'added') {
+              console.log('✅ New task synced from Firebase:', change.doc.id);
+            }
+            if (change.type === 'modified') {
+              console.log('🔄 Task updated from Firebase:', change.doc.id);
+            }
+            if (change.type === 'removed') {
+              console.log('🗑️ Task deleted from Firebase:', change.doc.id);
+            }
+          });
+        }
+        
+        console.log(`📊 Firebase: Loaded ${tasks.length} tasks (${changes.length} changes)`);
         callback(tasks);
       },
       (error) => {
-        console.error('Firebase tasks subscription error:', error);
+        console.error('❌ Firebase tasks subscription error:', error);
         // Provide empty array on error to prevent app crash
         callback([]);
       }
@@ -68,7 +87,9 @@ export const firestoreTasks = {
       Object.entries(taskWithUser).filter(([_, value]) => value !== undefined)
     );
     
+    console.log('Uploading new task to Firebase...');
     const docRef = await addDoc(collection(db, TASKS_COLLECTION), cleanTask);
+    console.log(`Task uploaded successfully: ${docRef.id}`);
     return docRef.id;
   },
 
@@ -81,14 +102,18 @@ export const firestoreTasks = {
     );
 
     if (Object.keys(cleanUpdates).length > 0) {
+      console.log(`Updating task ${id} in Firebase...`);
       await updateDoc(taskRef, cleanUpdates);
+      console.log(`Task ${id} updated successfully`);
     }
   },
 
   // Delete task
   delete: async (id: string) => {
     const taskRef = doc(db, TASKS_COLLECTION, id);
+    console.log(`Deleting task ${id} from Firebase...`);
     await deleteDoc(taskRef);
+    console.log(`Task ${id} deleted successfully`);
   },
 };
 
