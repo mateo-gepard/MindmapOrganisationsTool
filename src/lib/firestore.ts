@@ -19,15 +19,14 @@ const TASKS_COLLECTION = 'tasks';
 const TASK_DETAILS_COLLECTION = 'taskDetails';
 const USER_DATA_COLLECTION = 'userData';
 
-// User ID - in real app this would come from authentication
+// User ID - get from localStorage (username-based)
 const getCurrentUserId = () => {
-  // For now, use a fixed user ID or localStorage fallback
-  let userId = localStorage.getItem('mindmap-user-id');
-  if (!userId) {
-    userId = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    localStorage.setItem('mindmap-user-id', userId);
+  const username = localStorage.getItem('mindmap-username');
+  if (!username) {
+    // Should never happen as we require login, but fallback to 'Mateo'
+    return 'Mateo';
   }
-  return userId;
+  return username;
 };
 
 // Task operations

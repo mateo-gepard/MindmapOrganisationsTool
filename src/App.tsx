@@ -1,18 +1,35 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAppStore } from './stores/firebaseStore';
 import { MapView } from './components/views/MapView';
 import { WhiteboardView } from './components/views/WhiteboardView';
 import { CalendarView } from './components/views/CalendarView';
 import { DailyView } from './components/views/DailyView';
+import LoginModal from './components/modals/LoginModal';
 import './App.css';
 
 function App() {
-  const { currentView, setCurrentView, initializeFirebase } = useAppStore();
+  const { currentView, setCurrentView, currentUser, setCurrentUser, initializeFirebase } = useAppStore();
+  const [showLogin, setShowLogin] = useState(false);
 
-  // Initialize Firebase on app start
+  // Check for existing username on app start
   useEffect(() => {
-    initializeFirebase();
-  }, [initializeFirebase]);
+    const savedUsername = localStorage.getItem('mindmap-username');
+    if (savedUsername) {
+      setCurrentUser(savedUsername);
+      initializeFirebase();
+    } else {
+      setShowLogin(true);
+    }
+  }, [setCurrentUser, initializeFirebase]);
+
+  const handleLogin = (username: string) => {
+    setCurrentUser(username);
+    setShowLogin(false);
+  };
+
+  if (showLogin) {
+    return <LoginModal onLogin={handleLogin} />;
+  }
 
 
 
@@ -27,6 +44,11 @@ function App() {
           <h1 className="text-2xl font-bold bg-gradient-to-r from-navy to-orange bg-clip-text text-transparent">
             Mindmap
           </h1>
+          {currentUser && (
+            <div className="ml-4 px-3 py-1 bg-blue/20 rounded-lg">
+              <span className="text-sm font-medium text-navy">👤 {currentUser}</span>
+            </div>
+          )}
         </div>
         
         <div className="flex gap-2">

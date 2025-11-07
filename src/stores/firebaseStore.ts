@@ -11,6 +11,10 @@ import type {
 import { firestoreTasks, firestoreTaskDetails, firestoreUserData } from '../lib/firestore';
 
 interface AppState {
+  // User management
+  currentUser: string | null;
+  setCurrentUser: (username: string) => void;
+
   // View management
   currentView: ViewType;
   setCurrentView: (view: ViewType) => void;
@@ -80,6 +84,7 @@ const defaultFilters: FilterConfig = {
 
 export const useAppStore = create<AppState>((set, get) => ({
   // Initial state
+  currentUser: null,
   currentView: 'map',
   tasks: [],
   taskDetails: new Map(),
@@ -89,6 +94,14 @@ export const useAppStore = create<AppState>((set, get) => ({
   filters: defaultFilters,
   isDailyPlanningMode: false,
   dailyTodos: [],
+
+  // User management
+  setCurrentUser: (username) => {
+    set({ currentUser: username });
+    localStorage.setItem('mindmap-username', username);
+    // Reinitialize Firebase with new user
+    get().initializeFirebase();
+  },
 
   // View management
   setCurrentView: (view) => set({ currentView: view }),
