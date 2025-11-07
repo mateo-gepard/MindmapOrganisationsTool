@@ -8,6 +8,7 @@ import type {
   ViewType,
   Area,
 } from '../types';
+import { firestoreTasks, firestoreTaskDetails, firestoreUserData } from '../lib/firestore';
 
 interface AppState {
   // View management
@@ -35,11 +36,11 @@ interface AppState {
   filters: FilterConfig;
   setFilters: (filters: Partial<FilterConfig>) => void;
 
-  // Task operations
-  addTask: (task: Omit<Task, 'id' | 'createdAt'>) => void;
-  updateTask: (id: string, updates: Partial<Task>) => void;
-  deleteTask: (id: string) => void;
-  toggleTaskComplete: (id: string) => void;
+  // Task operations (Firebase-enabled)
+  addTask: (task: Omit<Task, 'id' | 'createdAt'>) => Promise<void>;
+  updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
+  deleteTask: (id: string) => Promise<void>;
+  toggleTaskComplete: (id: string) => Promise<void>;
 
   // Large task operations
   updateTaskDetail: (taskId: string, detail: Partial<TaskDetail>) => void;
@@ -55,9 +56,12 @@ interface AppState {
   addTimeBlock: (block: Omit<TimeBlock, 'id'>) => void;
   updateTimeBlock: (id: string, updates: Partial<TimeBlock>) => void;
   deleteTimeBlock: (id: string) => void;
+
+  // Firebase initialization
+  initializeFirebase: () => void;
 }
 
-// Default areas configuration - circles with clear overlapping intersections
+// Default areas configuration
 const defaultAreas: Area[] = [
   { id: 'school', name: 'Schule', color: '#003049', position: { x: 280, y: 220 }, radius: 160 },
   { id: 'sport', name: 'Sport', color: '#669bbc', position: { x: 520, y: 220 }, radius: 160 },
@@ -74,86 +78,44 @@ const defaultFilters: FilterConfig = {
   focusMode: false,
 };
 
-// LocalStorage helpers
-const STORAGE_KEY = 'mindmap-app-data';
-
-const loadFromStorage = () => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const data = JSON.parse(stored);
-      return {
-        tasks: data.tasks || [],
-        dailyTodos: data.dailyTodos || [],
-        taskDetails: new Map<string, TaskDetail>(data.taskDetails || []),
-        recurrences: new Map<string, Recurrence>(data.recurrences || []),
-        timeBlocks: data.timeBlocks || [],
-      };
-    }
-  } catch (error) {
-    console.error('Failed to load from localStorage:', error);
-  }
-  return {
-    tasks: [],
-    dailyTodos: [],
-    taskDetails: new Map<string, TaskDetail>(),
-    recurrences: new Map<string, Recurrence>(),
-    timeBlocks: [],
-  };
-};
-
-const saveToStorage = (tasks: Task[], dailyTodos: string[], taskDetails: Map<string, TaskDetail>, recurrences: Map<string, Recurrence>, timeBlocks: TimeBlock[]) => {
-  try {
-    const dataToSave = {
-      tasks,
-      dailyTodos,
-      taskDetails: Array.from(taskDetails.entries()),
-      recurrences: Array.from(recurrences.entries()),
-      timeBlocks,
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
-  } catch (error) {
-    console.error('Failed to save to localStorage:', error);
-  }
-};
-
-const initialData = loadFromStorage();
-
-export const useAppStore = create<AppState>((set) => ({
-  // Initial state - load from localStorage
+export const useAppStore = create<AppState>((set, get) => ({
+  // Initial state
   currentView: 'map',
-  tasks: initialData.tasks,
-  taskDetails: initialData.taskDetails,
-  recurrences: initialData.recurrences,
-  timeBlocks: initialData.timeBlocks,
+  tasks: [],
+  taskDetails: new Map(),
+  recurrences: new Map(),
+  timeBlocks: [],
   areas: defaultAreas,
   filters: defaultFilters,
   isDailyPlanningMode: false,
-  dailyTodos: initialData.dailyTodos,
+  dailyTodos: [],
 
   // View management
   setCurrentView: (view) => set({ currentView: view }),
 
   // Daily planning mode
   setDailyPlanningMode: (enabled) => set({ isDailyPlanningMode: enabled }),
-  addToDailyTodos: (taskId) =>
-    set((state) => {
-      const newDailyTodos = state.dailyTodos.includes(taskId)
-        ? state.dailyTodos
-        : [...state.dailyTodos, taskId];
-      saveToStorage(state.tasks, newDailyTodos, state.taskDetails, state.recurrences, state.timeBlocks);
-      return { dailyTodos: newDailyTodos };
-    }),
-  removeFromDailyTodos: (taskId) =>
-    set((state) => {
-      const newDailyTodos = state.dailyTodos.filter((id) => id !== taskId);
-      saveToStorage(state.tasks, newDailyTodos, state.taskDetails, state.recurrences, state.timeBlocks);
-      return { dailyTodos: newDailyTodos };
-    }),
-  clearDailyTodos: () => set((state) => {
-    saveToStorage(state.tasks, [], state.taskDetails, state.recurrences, state.timeBlocks);
-    return { dailyTodos: [] };
-  }),
+  
+  addToDailyTodos: async (taskId) => {
+    const state = get();
+    if (!state.dailyTodos.includes(taskId)) {
+      const newDailyTodos = [...state.dailyTodos, taskId];
+      set({ dailyTodos: newDailyTodos });
+      await firestoreUserData.updateDailyTodos(newDailyTodos);
+    }
+  },
+  
+  removeFromDailyTodos: async (taskId) => {
+    const state = get();
+    const newDailyTodos = state.dailyTodos.filter((id) => id !== taskId);
+    set({ dailyTodos: newDailyTodos });
+    await firestoreUserData.updateDailyTodos(newDailyTodos);
+  },
+  
+  clearDailyTodos: async () => {
+    set({ dailyTodos: [] });
+    await firestoreUserData.updateDailyTodos([]);
+  },
 
   // Filter management
   setFilters: (newFilters) =>
@@ -161,85 +123,70 @@ export const useAppStore = create<AppState>((set) => ({
       filters: { ...state.filters, ...newFilters },
     })),
 
-  // Task operations
-  addTask: (taskData) =>
-    set((state) => {
-      const newTask: Task = {
-        ...taskData,
-        id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        createdAt: new Date(),
-        isHybrid: taskData.areas.length > 1,
-      };
+  // Firebase-enabled task operations
+  addTask: async (taskData) => {
+    const newTask: Omit<Task, 'id'> = {
+      ...taskData,
+      createdAt: new Date(),
+      isHybrid: taskData.areas.length > 1,
+    };
 
-      const newTaskDetails = new Map(state.taskDetails);
+    try {
+      const taskId = await firestoreTasks.add(newTask);
       
       // Initialize task detail for large tasks
       if (newTask.type === 'large') {
         const detail: TaskDetail = {
-          taskId: newTask.id,
+          taskId,
           goal: '',
           progress: 0,
           subtasks: [],
           milestones: [],
         };
-        newTaskDetails.set(newTask.id, detail);
+        await firestoreTaskDetails.add(detail);
       }
+    } catch (error) {
+      console.error('Error adding task:', error);
+    }
+  },
 
-      const newTasks = [...state.tasks, newTask];
-      saveToStorage(newTasks, state.dailyTodos, newTaskDetails, state.recurrences, state.timeBlocks);
+  updateTask: async (id, updates) => {
+    try {
+      await firestoreTasks.update(id, {
+        ...updates,
+        isHybrid: (updates.areas || get().tasks.find(t => t.id === id)?.areas || []).length > 1,
+      });
+    } catch (error) {
+      console.error('Error updating task:', error);
+    }
+  },
 
-      return {
-        tasks: newTasks,
-        taskDetails: newTaskDetails,
+  deleteTask: async (id) => {
+    try {
+      await firestoreTasks.delete(id);
+      // Remove from daily todos if present
+      const state = get();
+      if (state.dailyTodos.includes(id)) {
+        const newDailyTodos = state.dailyTodos.filter(todoId => todoId !== id);
+        set({ dailyTodos: newDailyTodos });
+        await firestoreUserData.updateDailyTodos(newDailyTodos);
+      }
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    }
+  },
+
+  toggleTaskComplete: async (id) => {
+    const task = get().tasks.find(t => t.id === id);
+    if (task) {
+      const updates = {
+        completedAt: task.completedAt ? undefined : new Date(),
       };
-    }),
+      await get().updateTask(id, updates);
+    }
+  },
 
-  updateTask: (id, updates) =>
-    set((state) => {
-      const newTasks = state.tasks.map((task) =>
-        task.id === id
-          ? { ...task, ...updates, isHybrid: (updates.areas || task.areas).length > 1 }
-          : task
-      );
-      saveToStorage(newTasks, state.dailyTodos, state.taskDetails, state.recurrences, state.timeBlocks);
-      return { tasks: newTasks };
-    }),
-
-  deleteTask: (id) =>
-    set((state) => {
-      const newTaskDetails = new Map(state.taskDetails);
-      const newRecurrences = new Map(state.recurrences);
-      newTaskDetails.delete(id);
-      newRecurrences.delete(id);
-
-      const newTasks = state.tasks.filter((task) => task.id !== id);
-      const newTimeBlocks = state.timeBlocks.filter((block) => block.taskId !== id);
-      const newDailyTodos = state.dailyTodos.filter((todoId) => todoId !== id);
-
-      saveToStorage(newTasks, newDailyTodos, newTaskDetails, newRecurrences, newTimeBlocks);
-
-      return {
-        tasks: newTasks,
-        taskDetails: newTaskDetails,
-        recurrences: newRecurrences,
-        timeBlocks: newTimeBlocks,
-        dailyTodos: newDailyTodos,
-      };
-    }),
-
-  toggleTaskComplete: (id) =>
-    set((state) => ({
-      tasks: state.tasks.map((task) =>
-        task.id === id
-          ? {
-              ...task,
-              completedAt: task.completedAt ? undefined : new Date(),
-            }
-          : task
-      ),
-    })),
-
-  // Large task operations
+  // Large task operations (kept for local state management)
   updateTaskDetail: (taskId, detail) =>
     set((state) => {
       const newTaskDetails = new Map(state.taskDetails);
@@ -255,7 +202,6 @@ export const useAppStore = create<AppState>((set) => ({
       const newTaskDetails = new Map(state.taskDetails);
       const existing = newTaskDetails.get(taskId);
       if (existing) {
-        // Calculate next order number
         const maxOrder = Math.max(
           ...existing.subtasks.map(st => st.order),
           ...existing.milestones.map(m => m.order),
@@ -296,12 +242,11 @@ export const useAppStore = create<AppState>((set) => ({
       return { taskDetails: newTaskDetails };
     }),
 
-  addMilestone: (taskId: string, title: string, targetDate?: Date) =>
+  addMilestone: (taskId: string, title: string, targetDate: Date) =>
     set((state) => {
       const newTaskDetails = new Map(state.taskDetails);
       const existing = newTaskDetails.get(taskId);
       if (existing) {
-        // Calculate next order number
         const maxOrder = Math.max(
           ...existing.subtasks.map(st => st.order),
           ...existing.milestones.map(m => m.order),
@@ -322,7 +267,7 @@ export const useAppStore = create<AppState>((set) => ({
       return { taskDetails: newTaskDetails };
     }),
 
-  // Recurrence operations
+  // Recurrence operations (local for now)
   setRecurrence: (taskId, recurrence) =>
     set((state) => {
       const newRecurrences = new Map(state.recurrences);
@@ -343,7 +288,7 @@ export const useAppStore = create<AppState>((set) => ({
       return { recurrences: newRecurrences };
     }),
 
-  // Time block operations
+  // Time block operations (local for now)
   addTimeBlock: (blockData) =>
     set((state) => ({
       timeBlocks: [
@@ -366,4 +311,29 @@ export const useAppStore = create<AppState>((set) => ({
     set((state) => ({
       timeBlocks: state.timeBlocks.filter((block) => block.id !== id),
     })),
+
+  // Initialize Firebase listeners
+  initializeFirebase: () => {
+    // Initialize user data
+    firestoreUserData.initialize();
+
+    // Subscribe to tasks
+    firestoreTasks.subscribe((tasks) => {
+      set({ tasks });
+    });
+
+    // Subscribe to task details
+    firestoreTaskDetails.subscribe((details) => {
+      const taskDetailsMap = new Map();
+      Object.entries(details).forEach(([taskId, detail]) => {
+        taskDetailsMap.set(taskId, detail);
+      });
+      set({ taskDetails: taskDetailsMap });
+    });
+
+    // Subscribe to user data (daily todos)
+    firestoreUserData.subscribe((data) => {
+      set({ dailyTodos: data.dailyTodos });
+    });
+  },
 }));

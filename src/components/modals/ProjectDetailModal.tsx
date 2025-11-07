@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import type { Task, Subtask, Milestone } from '../../types';
-import { useAppStore } from '../../stores/appStore';
+import { useAppStore } from '../../stores/firebaseStore';
 
 interface ProjectDetailModalProps {
   task: Task;

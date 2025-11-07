@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useAppStore } from '../../stores/appStore';
+import { useAppStore } from '../../stores/firebaseStore';
 import type { Task } from '../../types';
 
 export const CalendarView: React.FC = () => {

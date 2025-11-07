@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAppStore } from '../../stores/appStore';
+import { useAppStore } from '../../stores/firebaseStore';
 
 export const DailyView: React.FC = () => {
   const { tasks, dailyTodos, removeFromDailyTodos, clearDailyTodos, toggleTaskComplete } = useAppStore();

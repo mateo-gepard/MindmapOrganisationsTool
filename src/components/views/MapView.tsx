@@ -7,7 +7,7 @@ import ReactFlow, {
 } from 'reactflow';
 import type { Node, NodeTypes } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { useAppStore } from '../../stores/appStore';
+import { useAppStore } from '../../stores/firebaseStore';
 import { TaskPin } from '../pins/TaskPin';
 import { TaskEditModal } from '../modals/TaskEditModal';
 import { ProjectDetailModal } from '../modals/ProjectDetailModal';

@@ -1,24 +1,18 @@
 import { useEffect } from 'react';
-import { useAppStore } from './stores/appStore';
+import { useAppStore } from './stores/firebaseStore';
 import { MapView } from './components/views/MapView';
 import { WhiteboardView } from './components/views/WhiteboardView';
 import { CalendarView } from './components/views/CalendarView';
 import { DailyView } from './components/views/DailyView';
-import { demoTasks } from './utils/demoData';
 import './App.css';
 
 function App() {
-  const { currentView, setCurrentView, addTask } = useAppStore();
+  const { currentView, setCurrentView, initializeFirebase } = useAppStore();
 
-  // Load demo data only once on first mount
+  // Initialize Firebase on app start
   useEffect(() => {
-    // Check if tasks array is empty to prevent duplicate loading
-    // (React Strict Mode can cause useEffect to run twice in development)
-    const currentTasks = useAppStore.getState().tasks;
-    if (currentTasks.length === 0) {
-      demoTasks.forEach((task) => addTask(task));
-    }
-  }, []); // Empty dependency array - only runs once on mount
+    initializeFirebase();
+  }, [initializeFirebase]);
 
   // Keyboard shortcuts
   useEffect(() => {

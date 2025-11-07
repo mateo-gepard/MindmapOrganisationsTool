@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Task, TaskType, Priority, AreaId } from '../../types';
-import { useAppStore } from '../../stores/appStore';
+import { useAppStore } from '../../stores/firebaseStore';
 
 interface TaskEditModalProps {
   task: Task;

@@ -1,122 +1,240 @@
-# Mindmap – Spatial Task Management# React + TypeScript + Vite
+# 🧠 Mindmap Organization Tool# Mindmap – Spatial Task Management# React + TypeScript + Vite
 
 
 
-Eine elegante, räumlich organisierte Aufgabenverwaltung mit drei komplementären Ansichten für optimale Produktivität.This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An interactive task management application with drag-and-drop functionality, built with React, TypeScript, and Firebase.
 
 
 
-## 🎯 KonzeptCurrently, two official plugins are available:
+## ✨ FeaturesEine elegante, räumlich organisierte Aufgabenverwaltung mit drei komplementären Ansichten für optimale Produktivität.This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 
 
-Mindmap organisiert Aufgaben über **fünf Lebensbereiche** hinweg:- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- **Interactive Mindmap**: Drag and drop tasks between different life areas
 
-- **Schule** (Blau)- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **4 Views**: Map, Whiteboard, Calendar, and Daily planning views
 
-- **Sport** (Grün)
+- **Daily Planning**: Select tasks for focused daily todos## 🎯 KonzeptCurrently, two official plugins are available:
 
-- **Geschäft** (Lila)## React Compiler
+- **Real-time Sync**: Firebase integration for cross-device synchronization
 
-- **Projekte** (Orange)
+- **Priority System**: Visual priority indicators with size-based pins
 
-- **Freizeitaktivitäten** (Pink) - als übergreifender Umbrella-BereichThe React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Modern UI**: Custom color palette with glassmorphism effects
 
-
-
-## 🎨 Drei Views## Expanding the ESLint configuration
+- **Keyboard Shortcuts**: Quick navigation (1-4 keys)Mindmap organisiert Aufgaben über **fünf Lebensbereiche** hinweg:- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
 
 
 
-### 1. 🗺️ Map View – Die große KarteIf you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🚀 Tech Stack- **Schule** (Blau)- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-- **Zweck**: Räumliche, mentale Übersicht ohne Listen-Overload
 
-- Unendlicher Canvas mit Zoom/Pan```js
 
-- Fünf überlappende Kreisbereicheexport default defineConfig([
+- **Frontend**: React 19, TypeScript, Vite- **Sport** (Grün)
 
-- Drei Pin-Typen (Form-basiert):  globalIgnores(['dist']),
+- **UI**: Tailwind CSS, React Flow
 
-  - **⭕ Repetitiv**: Runder Pin mit Ring (Frequenz)  {
+- **State**: Zustand- **Geschäft** (Lila)## React Compiler
+
+- **Database**: Firebase Firestore
+
+- **Deployment**: Vercel-ready- **Projekte** (Orange)
+
+
+
+## 🔥 Firebase Setup- **Freizeitaktivitäten** (Pink) - als übergreifender Umbrella-BereichThe React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+
+
+
+### 1. Create Firebase Project
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+
+2. Click "Create a project"## 🎨 Drei Views## Expanding the ESLint configuration
+
+3. Name it (e.g., "mindmap-organizer")
+
+4. Enable Google Analytics (optional)
+
+
+
+### 2. Setup Firestore Database### 1. 🗺️ Map View – Die große KarteIf you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+
+1. In Firebase Console → "Firestore Database"
+
+2. Click "Create database"- **Zweck**: Räumliche, mentale Übersicht ohne Listen-Overload
+
+3. Choose "Start in test mode" (for development)
+
+4. Select your region- Unendlicher Canvas mit Zoom/Pan```js
+
+
+
+### 3. Get Configuration- Fünf überlappende Kreisbereicheexport default defineConfig([
+
+1. Go to Project Settings (gear icon)
+
+2. Scroll to "Your apps" section- Drei Pin-Typen (Form-basiert):  globalIgnores(['dist']),
+
+3. Click "Web app" icon (</>)
+
+4. Register app name  - **⭕ Repetitiv**: Runder Pin mit Ring (Frequenz)  {
+
+5. Copy the config object
 
   - **□ Einmalig**: Rechteckiger Pin (feste Kontur)    files: ['**/*.{ts,tsx}'],
 
-  - **△ Groß/Projekt**: Dreieckiger Pin (mit Expand-Lasche)    extends: [
+### 4. Configure Environment Variables
+
+1. Copy `.env.example` to `.env`  - **△ Groß/Projekt**: Dreieckiger Pin (mit Expand-Lasche)    extends: [
+
+2. Fill in your Firebase config:
 
 - Drag & Drop in Bereiche/Schnittmengen → automatisches Tagging      // Other configs...
 
-- Hybrid-Aufgaben in Schnittmengen (max. 2 Bereiche)
+```env
 
-      // Remove tseslint.configs.recommended and replace with this
+VITE_FIREBASE_API_KEY=your-api-key-here- Hybrid-Aufgaben in Schnittmengen (max. 2 Bereiche)
 
-### 2. 📋 Whiteboard View – Liste mit Struktur      tseslint.configs.recommendedTypeChecked,
+VITE_FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com
 
-- **Zweck**: Schnell arbeiten ohne Grafik      // Alternatively, use this for stricter rules
+VITE_FIREBASE_PROJECT_ID=your-project-id      // Remove tseslint.configs.recommended and replace with this
 
-- Fünf Sektionen nach Bereichen      tseslint.configs.strictTypeChecked,
+VITE_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
 
-- Drei Unterabschnitte: Repetitiv, Einmalig, Groß      // Optionally, add this for stylistic rules
+VITE_FIREBASE_MESSAGING_SENDER_ID=your-sender-id### 2. 📋 Whiteboard View – Liste mit Struktur      tseslint.configs.recommendedTypeChecked,
 
-- Sortierung: Priorität → Fälligkeit      tseslint.configs.stylisticTypeChecked,
+VITE_FIREBASE_APP_ID=your-app-id
 
-- Expandierbare Groß-Tasks mit Subtasks
+```- **Zweck**: Schnell arbeiten ohne Grafik      // Alternatively, use this for stricter rules
+
+
+
+## 🛠️ Development- Fünf Sektionen nach Bereichen      tseslint.configs.strictTypeChecked,
+
+
+
+```bash- Drei Unterabschnitte: Repetitiv, Einmalig, Groß      // Optionally, add this for stylistic rules
+
+# Install dependencies
+
+npm install- Sortierung: Priorität → Fälligkeit      tseslint.configs.stylisticTypeChecked,
+
+
+
+# Start development server- Expandierbare Groß-Tasks mit Subtasks
+
+npm run dev
 
 - Hybrid-Aufgaben erscheinen in beiden Bereichen      // Other configs...
 
-    ],
+# Build for production
 
-### 3. 📅 Calendar View – Deadlines sichtbar machen    languageOptions: {
+npm run build    ],
 
-- **Zweck**: Zeitbezug für Fälligkeiten      parserOptions: {
 
-- Wochenraster mit Deadlines        project: ['./tsconfig.node.json', './tsconfig.app.json'],
 
-- Meilensteine aus Groß-Tasks        tsconfigRootDir: import.meta.dirname,
+# Preview production build### 3. 📅 Calendar View – Deadlines sichtbar machen    languageOptions: {
 
-- Repetitiv-Instanzen als getönte Marker      },
+npm run preview
+
+```- **Zweck**: Zeitbezug für Fälligkeiten      parserOptions: {
+
+
+
+## 📱 Usage- Wochenraster mit Deadlines        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+
+
+
+1. **Map View**: Drag tasks between life areas (School, Sport, Business, Projects, Leisure)- Meilensteine aus Groß-Tasks        tsconfigRootDir: import.meta.dirname,
+
+2. **Daily Planning**: Click the ✨ button to enter planning mode, then click tasks to add to daily todos
+
+3. **Views**: Use keyboard shortcuts (1-4) or navigation buttons- Repetitiv-Instanzen als getönte Marker      },
+
+4. **Task Management**: Click tasks to edit, or use the + button to create new ones
 
 - Optionale Time-Blocks (lokal, kein Sync im MVP)      // other options...
 
+## 🎨 Color Palette
+
     },
 
-## 🎯 Task-Typen  },
+- **Orange**: `#780000` - High priority elements
 
-])
+- **Crimson**: `#c1121f` - Important actions  ## 🎯 Task-Typen  },
+
+- **Cream**: `#fdf0d5` - Background elements
+
+- **Navy**: `#003049` - Primary text and borders])
+
+- **Blue**: `#669bbc` - Secondary elements
 
 | Typ | Form | Verwendung |```
 
+## 🔐 Security Rules (Production)
+
 |-----|------|------------|
+
+Update Firestore rules for production:
 
 | **Repetitiv** | ⭕ Kreis mit Ring | Wiederkehrende Gewohnheiten |You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-| **Einmalig** | □ Rechteck | To-Do mit Deadline |
+```javascript
 
-| **Groß/Projekt** | △ Dreieck | Subtasks, Meilensteine, Fortschritt |```js
+rules_version = '2';| **Einmalig** | □ Rechteck | To-Do mit Deadline |
 
-// eslint.config.js
+service cloud.firestore {
 
-## 🚀 Quick Startimport reactX from 'eslint-plugin-react-x'
+  match /databases/{database}/documents {| **Groß/Projekt** | △ Dreieck | Subtasks, Meilensteine, Fortschritt |```js
 
-import reactDom from 'eslint-plugin-react-dom'
+    // Allow read/write for authenticated users on their own data
 
-```bash
+    match /tasks/{document} {// eslint.config.js
 
-# Installationexport default defineConfig([
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
 
-npm install  globalIgnores(['dist']),
+    }## 🚀 Quick Startimport reactX from 'eslint-plugin-react-x'
+
+    match /taskDetails/{document} {
+
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;import reactDom from 'eslint-plugin-react-dom'
+
+    }
+
+    match /userData/{userId} {```bash
+
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+    }# Installationexport default defineConfig([
+
+  }
+
+}npm install  globalIgnores(['dist']),
+
+```
 
   {
 
+## 🚀 Deploy to Vercel
+
 # Development Server starten    files: ['**/*.{ts,tsx}'],
 
-npm run dev    extends: [
+1. Push code to GitHub
 
-      // Other configs...
+2. Connect repository to [Vercel](https://vercel.com)npm run dev    extends: [
 
-# Build für Production      // Enable lint rules for React
+3. Add environment variables in Vercel dashboard
 
-npm run build      reactX.configs['recommended-typescript'],
+4. Deploy automatically on push      // Other configs...
+
+
+
+## 📄 License# Build für Production      // Enable lint rules for React
+
+
+
+MIT License - feel free to use for personal and commercial projects!npm run build      reactX.configs['recommended-typescript'],
 
 ```      // Enable lint rules for React DOM
 

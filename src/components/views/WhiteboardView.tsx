@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAppStore } from '../../stores/appStore';
+import { useAppStore } from '../../stores/firebaseStore';
 import { ProjectDetailModal } from '../modals/ProjectDetailModal';
 import type { Task, AreaId } from '../../types';
 
