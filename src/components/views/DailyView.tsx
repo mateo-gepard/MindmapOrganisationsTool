@@ -1,30 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useAppStore } from '../../stores/firebaseStore';
-import { getCompletedTasksForIds } from '../../lib/completedTasksArchive';
-import type { CompletedTaskArchive } from '../../types';
 
 export const DailyView: React.FC = () => {
-  const { tasks, dailyTodos, removeFromDailyTodos, clearDailyTodos, toggleTaskComplete } = useAppStore();
-  const [completedArchived, setCompletedArchived] = useState<CompletedTaskArchive[]>([]);
+  const { tasks, dailyTodos, removeFromDailyTodos, clearDailyTodos, toggleTaskComplete, taskDetails, toggleSubtask } = useAppStore();
 
   const dailyTasks = tasks.filter((task) => dailyTodos.includes(task.id));
   
-  // Load completed archived tasks for progress calculation
-  useEffect(() => {
-    const loadCompletedArchived = async () => {
-      const archived = await getCompletedTasksForIds(dailyTodos);
-      setCompletedArchived(archived);
-    };
-    
-    if (dailyTodos.length > 0) {
-      loadCompletedArchived();
-    }
-  }, [dailyTodos]);
-  
-  // Count completed: both current tasks that are completed + archived tasks from today
-  const completedCount = dailyTasks.filter((task) => task.completedAt).length + completedArchived.length;
-  // Total: all tasks that are/were in daily todos (including those that got archived and deleted)
-  const totalCount = dailyTodos.length;
+  // Count completed tasks
+  const completedCount = dailyTasks.filter((task) => task.completedAt).length;
+  const totalCount = dailyTasks.length;
   const progressPercentage = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
   const getTypeIcon = (type: string) => {
@@ -126,7 +110,7 @@ export const DailyView: React.FC = () => {
                 <div className="flex items-start gap-4">
                   {/* Checkbox */}
                   <button
-                    onClick={() => toggleTaskComplete(task.id)}
+                    onClick={() => toggleTaskComplete(task.id, true)}
                     className={`flex-shrink-0 w-7 h-7 rounded-xl border-2 transition-all mt-1 ${
                       task.completedAt
                         ? 'bg-gradient-to-br from-blue to-navy border-blue shadow-lg shadow-blue/30'
@@ -191,6 +175,42 @@ export const DailyView: React.FC = () => {
                         </span>
                       ))}
                     </div>
+
+                    {/* Subtasks for large projects */}
+                    {task.type === 'large' && taskDetails.has(task.id) && (
+                      <div className="mt-3 space-y-2">
+                        <div className="text-sm font-semibold text-navy/70">Teilaufgaben:</div>
+                        {taskDetails.get(task.id)?.subtasks.map((subtask) => (
+                          <div key={subtask.id} className="flex items-center gap-2">
+                            <button
+                              onClick={() => toggleSubtask(task.id, subtask.id)}
+                              className={`flex-shrink-0 w-5 h-5 rounded border-2 transition-all ${
+                                subtask.done
+                                  ? 'bg-gradient-to-br from-blue to-navy border-blue'
+                                  : 'border-navy/30 hover:border-blue'
+                              }`}
+                            >
+                              {subtask.done && (
+                                <svg
+                                  className="w-full h-full text-white"
+                                  fill="none"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="3"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                            </button>
+                            <span className={`text-sm ${subtask.done ? 'line-through text-navy/50' : 'text-navy'}`}>
+                              {subtask.title}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     {task.completedAt && (
                       <div className="mt-2 text-sm text-green-600">

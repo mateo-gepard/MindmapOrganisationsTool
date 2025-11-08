@@ -28,6 +28,7 @@ interface AppState {
   addToDailyTodos: (taskId: string) => void;
   removeFromDailyTodos: (taskId: string) => void;
   clearDailyTodos: () => void;
+  cleanupDailyTodos: () => Promise<void>;
 
   // Tasks
   tasks: Task[];
@@ -46,7 +47,7 @@ interface AppState {
   addTask: (task: Omit<Task, 'id' | 'createdAt'>) => Promise<void>;
   updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
-  toggleTaskComplete: (id: string) => Promise<void>;
+  toggleTaskComplete: (id: string, fromDailyView?: boolean) => Promise<void>;
 
   // Large task operations
   updateTaskDetail: (taskId: string, detail: Partial<TaskDetail>) => void;
@@ -132,6 +133,40 @@ export const useAppStore = create<AppState>((set, get) => ({
     await firestoreUserData.updateDailyTodos([]);
   },
 
+  // Clean up completed tasks from daily todos (called on app start)
+  cleanupDailyTodos: async () => {
+    const state = get();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Check if we've already cleaned today
+    const lastCleanup = localStorage.getItem('dailyTodos-lastCleanup');
+    const lastCleanupDate = lastCleanup ? new Date(lastCleanup) : null;
+    
+    if (lastCleanupDate) {
+      lastCleanupDate.setHours(0, 0, 0, 0);
+      if (lastCleanupDate.getTime() === today.getTime()) {
+        // Already cleaned today
+        return;
+      }
+    }
+    
+    // Filter out completed tasks from yesterday
+    const activeTasks = state.tasks.filter(task => 
+      state.dailyTodos.includes(task.id) && !task.completedAt
+    );
+    const newDailyTodos = activeTasks.map(t => t.id);
+    
+    if (newDailyTodos.length !== state.dailyTodos.length) {
+      console.log(`🧹 Daily cleanup: ${state.dailyTodos.length - newDailyTodos.length} completed tasks removed from daily plan`);
+      set({ dailyTodos: newDailyTodos });
+      await firestoreUserData.updateDailyTodos(newDailyTodos);
+    }
+    
+    // Mark today as cleaned
+    localStorage.setItem('dailyTodos-lastCleanup', today.toISOString());
+  },
+
   // Filter management
   setFilters: (newFilters) =>
     set((state) => ({
@@ -203,7 +238,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  toggleTaskComplete: async (id) => {
+  toggleTaskComplete: async (id, fromDailyView = false) => {
     const task = get().tasks.find(t => t.id === id);
     if (!task) return;
 
@@ -220,6 +255,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     // Complete task
     const now = new Date();
     
+    // For daily view: only mark as complete, don't archive or delete
+    if (fromDailyView) {
+      await get().updateTask(id, { completedAt: now });
+      console.log(`✅ Daily task marked complete: "${task.title}"`);
+      return;
+    }
+    
+    // For other views: apply normal logic
     if (task.type === 'repetitive' && task.recurrence) {
       // For repetitive tasks: archive completion, reset, and update lastCompletedAt
       const completedTask = { ...task, completedAt: now };
@@ -406,6 +449,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       firestoreUserData.subscribe((data) => {
         console.log(`Received daily todos: ${data.dailyTodos.length} items`);
         set({ dailyTodos: data.dailyTodos });
+        
+        // Clean up completed tasks from daily todos (once per day)
+        get().cleanupDailyTodos().catch(console.error);
       });
       
       console.log('Firebase initialization completed successfully');

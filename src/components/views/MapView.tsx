@@ -77,6 +77,15 @@ export const MapView: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [fabExpanded, setFabExpanded] = useState(false);
 
+  // Reset daily planning mode when leaving MapView
+  React.useEffect(() => {
+    return () => {
+      if (isDailyPlanningMode) {
+        setDailyPlanningMode(false);
+      }
+    };
+  }, [isDailyPlanningMode, setDailyPlanningMode]);
+
   // Create all nodes - memoized to prevent unnecessary recreation
   const allNodes: Node[] = React.useMemo(() => {
     const areaNodes = areas.map((area) => ({
