@@ -151,17 +151,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
     }
     
-    // Filter out completed tasks from yesterday
-    const activeTasks = state.tasks.filter(task => 
-      state.dailyTodos.includes(task.id) && !task.completedAt
-    );
-    const newDailyTodos = activeTasks.map(t => t.id);
-    
-    if (newDailyTodos.length !== state.dailyTodos.length) {
-      console.log(`🧹 Daily cleanup: ${state.dailyTodos.length - newDailyTodos.length} completed tasks removed from daily plan`);
-      set({ dailyTodos: newDailyTodos });
-      await firestoreUserData.updateDailyTodos(newDailyTodos);
-    }
+    // Complete daily wipe - clear all tasks from daily plan
+    console.log(`🧹 Daily wipe: Clearing all ${state.dailyTodos.length} tasks from daily plan`);
+    set({ dailyTodos: [] });
+    await firestoreUserData.updateDailyTodos([]);
     
     // Mark today as cleaned
     localStorage.setItem('dailyTodos-lastCleanup', today.toISOString());
