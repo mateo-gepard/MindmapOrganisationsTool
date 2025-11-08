@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { Task, TaskType, Priority, AreaId } from '../../types';
 import { useAppStore } from '../../stores/firebaseStore';
+import { toISODateString } from '../../utils/dateHelpers';
 
 interface TaskEditModalProps {
   task: Task;
@@ -26,9 +27,7 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose }) =
   const [type, setType] = useState<TaskType>(task.type);
   const [priority, setPriority] = useState<Priority>(task.priority);
   const [selectedAreas, setSelectedAreas] = useState<AreaId[]>(task.areas);
-  const [dueDate, setDueDate] = useState(
-    task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : ''
-  );
+  const [dueDate, setDueDate] = useState(toISODateString(task.dueDate));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

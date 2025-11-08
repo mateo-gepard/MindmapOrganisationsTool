@@ -1,16 +1,62 @@
 import { format, startOfWeek, addDays, isSameDay, isToday, isThisWeek } from 'date-fns';
 import { de } from 'date-fns/locale';
 
-export function formatDate(date: Date): string {
-  return format(date, 'dd.MM.yyyy', { locale: de });
+// Safe date conversion helper
+export function toSafeDate(date: Date | string | undefined | null): Date | null {
+  if (!date) return null;
+  
+  try {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return null;
+    return d;
+  } catch {
+    return null;
+  }
 }
 
-export function formatTime(date: Date): string {
-  return format(date, 'HH:mm', { locale: de });
+export function formatDate(date: Date | string | undefined | null): string {
+  const safeDate = toSafeDate(date);
+  if (!safeDate) return '';
+  
+  try {
+    return format(safeDate, 'dd.MM.yyyy', { locale: de });
+  } catch {
+    return '';
+  }
 }
 
-export function formatDateTime(date: Date): string {
-  return format(date, 'dd.MM.yyyy HH:mm', { locale: de });
+export function formatTime(date: Date | string | undefined | null): string {
+  const safeDate = toSafeDate(date);
+  if (!safeDate) return '';
+  
+  try {
+    return format(safeDate, 'HH:mm', { locale: de });
+  } catch {
+    return '';
+  }
+}
+
+export function formatDateTime(date: Date | string | undefined | null): string {
+  const safeDate = toSafeDate(date);
+  if (!safeDate) return '';
+  
+  try {
+    return format(safeDate, 'dd.MM.yyyy HH:mm', { locale: de });
+  } catch {
+    return '';
+  }
+}
+
+// Safe ISO date string for input fields
+export function toISODateString(date: Date | string | undefined | null): string {
+  const safeDate = toSafeDate(date);
+  if (!safeDate) return '';
+  
+  try {
+    return safeDate.toISOString().split('T')[0];
+  } catch {
+    return '';
+  }
 }
 
 export function getWeekDays(date: Date = new Date()): Date[] {

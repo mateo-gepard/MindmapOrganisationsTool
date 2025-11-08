@@ -13,6 +13,7 @@ import { TaskEditModal } from '../modals/TaskEditModal';
 import { ProjectDetailModal } from '../modals/ProjectDetailModal';
 import { AddTaskModal } from '../modals/AddTaskModal';
 import { getAreasForPosition } from '../../utils/geometry';
+import { formatDate } from '../../utils/dateHelpers';
 import type { Task, AreaId } from '../../types';
 
 // Custom node for area circles
@@ -250,7 +251,7 @@ export const MapView: React.FC = () => {
               <div>
                 <span className="text-sm font-medium text-gray-600">Fällig:</span>
                 <span className="ml-2 text-sm text-gray-900">
-                  {new Date(selectedTask.dueDate).toLocaleDateString('de-DE')}
+                  {formatDate(selectedTask.dueDate)}
                 </span>
               </div>
             )}
@@ -259,7 +260,7 @@ export const MapView: React.FC = () => {
               <div>
                 <span className="text-sm font-medium text-gray-600">Erledigt am:</span>
                 <span className="ml-2 text-sm text-gray-900">
-                  {new Date(selectedTask.completedAt).toLocaleDateString('de-DE')}
+                  {formatDate(selectedTask.completedAt)}
                 </span>
               </div>
             )}
