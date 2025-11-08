@@ -1,12 +1,30 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAppStore } from '../../stores/firebaseStore';
+import { getCompletedTasksForIds } from '../../lib/completedTasksArchive';
+import type { CompletedTaskArchive } from '../../types';
 
 export const DailyView: React.FC = () => {
   const { tasks, dailyTodos, removeFromDailyTodos, clearDailyTodos, toggleTaskComplete } = useAppStore();
+  const [completedArchived, setCompletedArchived] = useState<CompletedTaskArchive[]>([]);
 
   const dailyTasks = tasks.filter((task) => dailyTodos.includes(task.id));
-  const completedCount = dailyTasks.filter((task) => task.completedAt).length;
-  const totalCount = dailyTasks.length;
+  
+  // Load completed archived tasks for progress calculation
+  useEffect(() => {
+    const loadCompletedArchived = async () => {
+      const archived = await getCompletedTasksForIds(dailyTodos);
+      setCompletedArchived(archived);
+    };
+    
+    if (dailyTodos.length > 0) {
+      loadCompletedArchived();
+    }
+  }, [dailyTodos]);
+  
+  // Count completed: both current tasks that are completed + archived tasks from today
+  const completedCount = dailyTasks.filter((task) => task.completedAt).length + completedArchived.length;
+  // Total: all tasks that are/were in daily todos (including those that got archived and deleted)
+  const totalCount = dailyTodos.length;
   const progressPercentage = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
   const getTypeIcon = (type: string) => {

@@ -73,6 +73,38 @@ export const getCompletedTasksHistory = async (limit: number = 50): Promise<Comp
   }
 };
 
+// Get completed tasks for specific task IDs (for daily view progress tracking)
+export const getCompletedTasksForIds = async (taskIds: string[]): Promise<CompletedTaskArchive[]> => {
+  if (taskIds.length === 0) return [];
+  
+  const userId = getCurrentUserId();
+  
+  // Get today's start
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+  const q = query(
+    collection(db, COMPLETED_TASKS_COLLECTION),
+    where('userId', '==', userId),
+    where('taskId', 'in', taskIds.slice(0, 10)), // Firestore 'in' limit is 10
+    where('completedAt', '>=', startOfToday),
+    orderBy('completedAt', 'desc')
+  );
+
+  try {
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate?.() || doc.data().createdAt,
+      completedAt: doc.data().completedAt?.toDate?.() || doc.data().completedAt,
+    })) as CompletedTaskArchive[];
+  } catch (error) {
+    console.error('❌ Error loading completed tasks for IDs:', error);
+    return [];
+  }
+};
+
 // Get statistics
 export const getCompletionStats = async (): Promise<{
   today: number;
