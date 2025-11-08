@@ -10,6 +10,18 @@ interface TaskEditModalProps {
 export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose }) => {
   const { updateTask, deleteTask, areas } = useAppStore();
   
+  // Safety check for areas
+  if (!areas || areas.length === 0) {
+    console.error('Areas not loaded yet');
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg shadow-2xl p-8">
+          <p className="text-gray-700">Lade Bereiche...</p>
+        </div>
+      </div>
+    );
+  }
+  
   const [title, setTitle] = useState(task.title);
   const [type, setType] = useState<TaskType>(task.type);
   const [priority, setPriority] = useState<Priority>(task.priority);

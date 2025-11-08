@@ -22,6 +22,23 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ task, on
 
   const detail = taskDetails.get(task.id);
   
+  // Safety check - if no detail exists yet, show loading or create initial state
+  React.useEffect(() => {
+    if (detail && !editingGoal) {
+      setGoalText(detail.goal || '');
+    }
+  }, [detail, editingGoal]);
+  
+  if (!detail) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg shadow-2xl p-8">
+          <p className="text-gray-700">Lade Projektdetails...</p>
+        </div>
+      </div>
+    );
+  }
+  
   // Create combined list of items with order
   const combinedItems = useMemo(() => {
     if (!detail) return [];
