@@ -14,6 +14,11 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose }) => {
   const [priority, setPriority] = useState<Priority>('medium');
   const [selectedAreas, setSelectedAreas] = useState<AreaId[]>(['school']);
   const [dueDate, setDueDate] = useState('');
+  
+  // Recurrence settings for repetitive tasks
+  const [recurrenceInterval, setRecurrenceInterval] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+  const [recurrenceFrequency, setRecurrenceFrequency] = useState(1);
+  const [selectedDaysOfWeek, setSelectedDaysOfWeek] = useState<number[]>([1]); // Monday default
 
   const toggleArea = (areaId: AreaId) => {
     if (selectedAreas.includes(areaId)) {
@@ -59,6 +64,15 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose }) => {
       // Only add dueDate if it has a value
       if (dueDate) {
         taskData.dueDate = new Date(dueDate);
+      }
+
+      // Add recurrence settings for repetitive tasks
+      if (type === 'repetitive') {
+        taskData.recurrence = {
+          interval: recurrenceInterval,
+          frequency: recurrenceFrequency,
+          ...(recurrenceInterval === 'weekly' && { daysOfWeek: selectedDaysOfWeek }),
+        };
       }
 
       await addTask(taskData);
@@ -184,6 +198,100 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose }) => {
               </button>
             </div>
           </div>
+
+          {/* Recurrence Settings - only for repetitive tasks */}
+          {type === 'repetitive' && (
+            <div className="bg-navy/5 p-4 rounded-lg border-2 border-navy/20">
+              <label className="block text-sm font-medium text-navy mb-3">
+                🔄 Wiederholungs-Intervall
+              </label>
+              
+              {/* Interval Type */}
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={() => setRecurrenceInterval('daily')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    recurrenceInterval === 'daily'
+                      ? 'bg-navy text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  Täglich
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRecurrenceInterval('weekly')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    recurrenceInterval === 'weekly'
+                      ? 'bg-navy text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  Wöchentlich
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRecurrenceInterval('monthly')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    recurrenceInterval === 'monthly'
+                      ? 'bg-navy text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  Monatlich
+                </button>
+              </div>
+
+              {/* Frequency */}
+              <div className="mb-3">
+                <label className="block text-xs text-gray-600 mb-1">
+                  Alle 
+                  <select
+                    value={recurrenceFrequency}
+                    onChange={(e) => setRecurrenceFrequency(Number(e.target.value))}
+                    className="mx-2 px-2 py-1 border border-gray-300 rounded text-sm"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7].map(n => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                  {recurrenceInterval === 'daily' && (recurrenceFrequency === 1 ? 'Tag' : 'Tage')}
+                  {recurrenceInterval === 'weekly' && (recurrenceFrequency === 1 ? 'Woche' : 'Wochen')}
+                  {recurrenceInterval === 'monthly' && (recurrenceFrequency === 1 ? 'Monat' : 'Monate')}
+                </label>
+              </div>
+
+              {/* Days of Week - only for weekly */}
+              {recurrenceInterval === 'weekly' && (
+                <div>
+                  <label className="block text-xs text-gray-600 mb-2">An diesen Tagen:</label>
+                  <div className="grid grid-cols-7 gap-1">
+                    {['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'].map((day, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => {
+                          if (selectedDaysOfWeek.includes(index)) {
+                            setSelectedDaysOfWeek(selectedDaysOfWeek.filter(d => d !== index));
+                          } else {
+                            setSelectedDaysOfWeek([...selectedDaysOfWeek, index].sort());
+                          }
+                        }}
+                        className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                          selectedDaysOfWeek.includes(index)
+                            ? 'bg-navy text-white'
+                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                        }`}
+                      >
+                        {day}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Areas */}
           <div>

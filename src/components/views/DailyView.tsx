@@ -114,6 +114,7 @@ export const DailyView: React.FC = () => {
                         ? 'bg-gradient-to-br from-blue to-navy border-blue shadow-lg shadow-blue/30'
                         : 'border-navy/30 hover:border-blue hover:shadow-md'
                     }`}
+                    title={task.completedAt ? 'Als unerledigt markieren' : 'Als erledigt markieren'}
                   >
                     {task.completedAt && (
                       <svg

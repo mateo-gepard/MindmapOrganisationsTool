@@ -52,6 +52,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ task, areaColor, onToggle, onCl
           onToggle();
         }}
         className="absolute top-2 right-2 w-4 h-4 cursor-pointer"
+        title={isCompleted ? 'Als unerledigt markieren' : 'Als erledigt markieren'}
       />
 
       {/* Type badge */}

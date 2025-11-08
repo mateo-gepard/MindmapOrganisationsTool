@@ -28,6 +28,14 @@ export interface Task {
   position?: { x: number; y: number }; // Position on map
   createdAt: Date;
   completedAt?: Date;
+  // For repetitive tasks
+  recurrence?: {
+    interval: 'daily' | 'weekly' | 'monthly';
+    frequency?: number; // e.g., every 2 days, every 3 weeks
+    daysOfWeek?: number[]; // For weekly: 0-6 (Sunday-Saturday)
+    dayOfMonth?: number; // For monthly: 1-31
+  };
+  lastCompletedAt?: Date; // Track last completion for repetitive tasks
 }
 
 // Extended details for large/project tasks
@@ -98,4 +106,19 @@ export interface ArchiveSnapshot {
   tasks: Task[];
   taskDetails: { [key: string]: TaskDetail };
   dailyTodos: string[];
+}
+
+// Completed task archive entry
+export interface CompletedTaskArchive {
+  id: string;
+  userId: string;
+  taskId: string;
+  title: string;
+  type: TaskType;
+  priority: Priority;
+  areas: AreaId[];
+  createdAt: Date;
+  completedAt: Date;
+  wasRepetitive: boolean;
+  recurrence?: Task['recurrence'];
 }
