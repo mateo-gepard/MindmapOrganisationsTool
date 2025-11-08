@@ -208,41 +208,43 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (!task) return;
 
     if (task.completedAt) {
-      // Uncomplete task
+      // Uncomplete task - now works because we use deleteField() in firestore.ts
+      console.log(`⬅️ Uncompleting task: "${task.title}"`);
       await get().updateTask(id, { 
         completedAt: undefined,
         lastCompletedAt: undefined 
       });
-    } else {
-      // Complete task
-      const now = new Date();
+      return;
+    }
+
+    // Complete task
+    const now = new Date();
+    
+    if (task.type === 'repetitive' && task.recurrence) {
+      // For repetitive tasks: archive completion, reset, and update lastCompletedAt
+      const completedTask = { ...task, completedAt: now };
+      await archiveCompletedTask(completedTask);
       
-      if (task.type === 'repetitive' && task.recurrence) {
-        // For repetitive tasks: archive completion, reset, and update lastCompletedAt
-        const completedTask = { ...task, completedAt: now };
-        await archiveCompletedTask(completedTask);
-        
-        // Reset task for next occurrence
-        await get().updateTask(id, { 
-          completedAt: undefined,
-          lastCompletedAt: now
-        });
-        
-        console.log(`🔄 Repetitive task completed and reset: "${task.title}"`);
-      } else {
-        // For one-time and large tasks: mark complete and archive
-        await get().updateTask(id, { completedAt: now });
-        
-        // Archive and then delete after a short delay
-        setTimeout(async () => {
-          const updatedTask = get().tasks.find(t => t.id === id);
-          if (updatedTask?.completedAt) {
-            await archiveCompletedTask(updatedTask);
-            await get().deleteTask(id);
-            console.log(`✅ Task completed, archived, and removed: "${task.title}"`);
-          }
-        }, 2000); // 2 second delay to show completion animation
-      }
+      // Reset task for next occurrence
+      await get().updateTask(id, { 
+        completedAt: undefined,
+        lastCompletedAt: now
+      });
+      
+      console.log(`🔄 Repetitive task completed and reset: "${task.title}"`);
+    } else {
+      // For one-time and large tasks: mark complete and archive
+      await get().updateTask(id, { completedAt: now });
+      
+      // Archive and then delete after a short delay
+      setTimeout(async () => {
+        const updatedTask = get().tasks.find(t => t.id === id);
+        if (updatedTask?.completedAt) {
+          await archiveCompletedTask(updatedTask);
+          await get().deleteTask(id);
+          console.log(`✅ Task completed, archived, and removed: "${task.title}"`);
+        }
+      }, 2000); // 2 second delay to show completion animation
     }
   },
 

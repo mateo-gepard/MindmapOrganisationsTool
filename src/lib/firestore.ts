@@ -9,7 +9,8 @@ import {
   onSnapshot,
   query,
   where,
-  orderBy
+  orderBy,
+  deleteField
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Task, TaskDetail } from '../types';
@@ -95,13 +96,21 @@ export const firestoreTasks = {
   // Update task
   update: async (id: string, updates: Partial<Task>) => {
     const taskRef = doc(db, TASKS_COLLECTION, id);
-    // Filter out undefined values to prevent Firebase errors
-    const cleanUpdates = Object.fromEntries(
-      Object.entries(updates as Record<string, any>).filter(([_, value]) => value !== undefined)
-    );
+    
+    // Convert undefined values to deleteField() to properly remove fields from Firestore
+    const cleanUpdates: Record<string, any> = {};
+    
+    for (const [key, value] of Object.entries(updates)) {
+      if (value === undefined) {
+        // Use deleteField() to explicitly remove the field from Firestore
+        cleanUpdates[key] = deleteField();
+      } else {
+        cleanUpdates[key] = value;
+      }
+    }
 
     if (Object.keys(cleanUpdates).length > 0) {
-      console.log(`Updating task ${id} in Firebase...`);
+      console.log(`Updating task ${id} in Firebase...`, cleanUpdates);
       await updateDoc(taskRef, cleanUpdates);
       console.log(`Task ${id} updated successfully`);
     }
