@@ -9,6 +9,7 @@ import type {
   Area,
 } from '../types';
 import { firestoreTasks, firestoreTaskDetails, firestoreUserData } from '../lib/firestore';
+import { triggerAutoBackup } from '../lib/archive';
 
 interface AppState {
   // User management
@@ -349,6 +350,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       firestoreTasks.subscribe((tasks) => {
         console.log(`Received ${tasks.length} tasks from Firebase`);
         set({ tasks });
+        
+        // Trigger auto-backup after data loads
+        const state = get();
+        triggerAutoBackup(tasks, state.taskDetails, state.dailyTodos).catch(console.error);
       });
 
       // Subscribe to task details

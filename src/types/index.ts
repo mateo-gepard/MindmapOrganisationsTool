@@ -88,3 +88,14 @@ export interface FilterConfig {
 
 // View type
 export type ViewType = 'map' | 'whiteboard' | 'calendar' | 'daily';
+
+// Archive snapshot for daily backups
+export interface ArchiveSnapshot {
+  id: string;
+  userId: string;
+  timestamp: Date;
+  type: 'morning' | 'evening'; // Two backups per day
+  tasks: Task[];
+  taskDetails: { [key: string]: TaskDetail };
+  dailyTodos: string[];
+}

@@ -38,10 +38,11 @@ service cloud.firestore {
 
 **⚠️ Warning**: These rules allow anyone to read/write your data. Only use for development!
 
-### 3. Create Required Index
+### 3. Create Required Indexes
 
-The app needs a composite index for queries:
+The app needs composite indexes for queries:
 
+#### Index 1: Tasks Query
 1. In Firebase Console → Firestore → **Indexes** tab
 2. Click **"Create Index"**
 3. Configure:
@@ -51,7 +52,29 @@ The app needs a composite index for queries:
      - Field: `createdAt` → Order: Descending
    - **Query scope**: Collection
 4. Click **"Create"**
-5. Wait 1-2 minutes for index to build
+
+#### Index 2: Archives Query (for Backup System)
+1. Click **"Create Index"** again
+2. Configure:
+   - **Collection ID**: `archives`
+   - **Fields to index**:
+     - Field: `userId` → Order: Ascending
+     - Field: `type` → Order: Ascending
+     - Field: `timestamp` → Order: Ascending
+   - **Query scope**: Collection
+3. Click **"Create"**
+
+#### Index 3: Archives History Query
+1. Click **"Create Index"** again
+2. Configure:
+   - **Collection ID**: `archives`
+   - **Fields to index**:
+     - Field: `userId` → Order: Ascending
+     - Field: `timestamp` → Order: Descending
+   - **Query scope**: Collection
+3. Click **"Create"**
+
+Wait 1-2 minutes for indexes to build.
 
 **OR** click the error link in your browser console - it will automatically create the index!
 
@@ -79,6 +102,12 @@ service cloud.firestore {
     match /userData/{userId} {
       allow read, write: if request.auth != null && 
                            request.auth.uid == userId;
+    }
+    
+    // Archives - user can only access their own backups
+    match /archives/{archiveId} {
+      allow read, write: if request.auth != null && 
+                           request.resource.data.userId == request.auth.uid;
     }
   }
 }

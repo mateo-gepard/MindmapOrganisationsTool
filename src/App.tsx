@@ -5,11 +5,13 @@ import { WhiteboardView } from './components/views/WhiteboardView';
 import { CalendarView } from './components/views/CalendarView';
 import { DailyView } from './components/views/DailyView';
 import LoginModal from './components/modals/LoginModal';
+import ArchiveModal from './components/modals/ArchiveModal';
 import './App.css';
 
 function App() {
   const { currentView, setCurrentView, currentUser, setCurrentUser, initializeFirebase } = useAppStore();
   const [showLogin, setShowLogin] = useState(false);
+  const [showArchive, setShowArchive] = useState(false);
 
   // Check for existing username on app start
   useEffect(() => {
@@ -51,7 +53,17 @@ function App() {
           )}
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          {/* Archive Button */}
+          <button
+            onClick={() => setShowArchive(true)}
+            className="px-4 py-2.5 rounded-xl font-medium bg-[#669bbc]/20 text-[#003049] hover:bg-[#669bbc] hover:text-white transition-all duration-200 hover:scale-105 flex items-center gap-2"
+            title="Archiv & Backups"
+          >
+            <span className="text-lg">📦</span>
+            <span className="hidden md:inline">Archiv</span>
+          </button>
+
           <button
             onClick={() => setCurrentView('map')}
             className={`px-5 py-2.5 rounded-xl font-medium transition-all duration-200 ${
@@ -105,6 +117,23 @@ function App() {
         {currentView === 'calendar' && <CalendarView />}
         {currentView === 'daily' && <DailyView />}
       </main>
+
+      {/* Archive Modal */}
+      {showArchive && (
+        <ArchiveModal
+          onClose={() => setShowArchive(false)}
+          onRestore={(restoredTasks, restoredDetails, restoredTodos) => {
+            // Note: This is a view-only restore - actual implementation would need
+            // to update Firebase. For now, we'll just log it.
+            console.log('Restore requested:', {
+              tasks: restoredTasks.length,
+              details: restoredDetails.size,
+              todos: restoredTodos.length
+            });
+            alert('ℹ️ Backup-Wiederherstellung ist derzeit nur zur Ansicht verfügbar. Die Funktion zum Überschreiben der aktuellen Daten wird in einer zukünftigen Version hinzugefügt.');
+          }}
+        />
+      )}
     </div>
   );
 }
