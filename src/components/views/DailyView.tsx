@@ -4,13 +4,26 @@ import { useAppStore } from '../../stores/firebaseStore';
 export const DailyView: React.FC = () => {
   const { tasks, dailyTodos, removeFromDailyTodos, clearDailyTodos, toggleTaskComplete, taskDetails, toggleSubtask } = useAppStore();
 
+  console.log('🔍 DailyView render - dailyTodos:', dailyTodos);
+  console.log('🔍 DailyView render - dailyTodos length:', dailyTodos.length);
+  console.log('🔍 DailyView render - tasks length:', tasks.length);
+
   const dailyTasks = tasks.filter((task) => dailyTodos.includes(task.id));
+  
+  console.log('🔍 DailyView render - dailyTasks after filter:', dailyTasks.length);
   
   // Debug: Log taskDetails
   React.useEffect(() => {
     console.log('DailyView - taskDetails size:', taskDetails.size);
     console.log('DailyView - taskDetails:', taskDetails);
   }, [taskDetails]);
+  
+  // Debug: Log dailyTodos changes
+  React.useEffect(() => {
+    console.log('📋 DailyView - dailyTodos changed:', dailyTodos);
+    console.log('📋 DailyView - dailyTodos IDs:', dailyTodos);
+    console.log('📋 DailyView - Number of daily tasks:', dailyTodos.length);
+  }, [dailyTodos]);
   
   // Count completed tasks
   const completedCount = dailyTasks.filter((task) => task.completedAt).length;

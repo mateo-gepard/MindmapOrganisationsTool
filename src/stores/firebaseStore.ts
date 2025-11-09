@@ -109,12 +109,14 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   // User management
   setCurrentUser: (username) => {
+    console.log(`👤 setCurrentUser called with: ${username}`);
     set({ currentUser: username });
     localStorage.setItem('mindmap-username', username);
     // Reset initialization guard for new user
     console.log('🔄 New user set, resetting Firebase initialization guard');
     isFirebaseInitialized = false;
     // Reinitialize Firebase with new user
+    console.log('🚀 About to call initializeFirebase from setCurrentUser...');
     get().initializeFirebase();
   },
 
@@ -626,8 +628,13 @@ export const useAppStore = create<AppState>((set, get) => ({
       // Subscribe to user data (daily todos) FIRST
       firestoreUserData.subscribe((data) => {
         console.log(`📥 Firebase subscriber triggered: Received ${data.dailyTodos.length} daily todos`);
-        console.log('Daily todos IDs:', data.dailyTodos);
+        console.log('📥 Daily todos IDs from Firebase:', data.dailyTodos);
+        console.log('📥 About to SET dailyTodos in Zustand store...');
         set({ dailyTodos: data.dailyTodos });
+        console.log('✅ dailyTodos SET in Zustand store');
+        const currentState = get();
+        console.log('✅ Verification - Current dailyTodos in store:', currentState.dailyTodos);
+        console.log('✅ Verification - dailyTodos length:', currentState.dailyTodos.length);
       });
       
       // THEN Initialize user data document
