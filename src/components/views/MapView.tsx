@@ -69,21 +69,13 @@ export const MapView: React.FC = () => {
     clearDailyTodos,
     toggleTaskComplete,
     setCurrentView,
-    currentView,
   } = useAppStore();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [projectDetailTask, setProjectDetailTask] = useState<Task | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [fabExpanded, setFabExpanded] = useState(false);
-  
-  // Use localStorage to persist the sidebar visibility state
-  const [showDailyTodoSidebar, setShowDailyTodoSidebar] = useState(() => {
-    const saved = localStorage.getItem('showDailyTodoSidebar');
-    const shouldShow = saved !== null ? saved === 'true' : true;
-    console.log('Daily sidebar initial state:', shouldShow, 'localStorage value:', saved);
-    return shouldShow;
-  });
+  const [showDailyTodoSidebar, setShowDailyTodoSidebar] = useState(true);
 
   // Reset daily planning mode when leaving MapView
   React.useEffect(() => {
@@ -93,15 +85,6 @@ export const MapView: React.FC = () => {
       }
     };
   }, [isDailyPlanningMode, setDailyPlanningMode]);
-
-  // Hide daily todo sidebar when switching views
-  React.useEffect(() => {
-    if (currentView !== 'map') {
-      console.log('Hiding daily sidebar - view changed to:', currentView);
-      setShowDailyTodoSidebar(false);
-      localStorage.setItem('showDailyTodoSidebar', 'false');
-    }
-  }, [currentView]);
 
   // Create all nodes - memoized to prevent unnecessary recreation
   const allNodes: Node[] = React.useMemo(() => {
@@ -341,20 +324,17 @@ export const MapView: React.FC = () => {
       )}
 
       {/* Daily To-Do Sidebar */}
-      {dailyTodos.length > 0 && currentView === 'map' && showDailyTodoSidebar && (
+      {dailyTodos.length > 0 && showDailyTodoSidebar && (
         <div className="absolute top-4 right-4 w-80 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-blue/30 p-5 max-h-[calc(100vh-2rem)] overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-bold bg-gradient-to-r from-blue to-navy bg-clip-text text-transparent flex items-center gap-2">
               <span className="text-xl">✨</span>
               Daily To-Do
             </h3>
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-3 items-center">
               <button
-                onClick={() => {
-                  setShowDailyTodoSidebar(false);
-                  localStorage.setItem('showDailyTodoSidebar', 'false');
-                }}
-                className="w-8 h-8 flex items-center justify-center rounded-lg bg-navy/10 hover:bg-red-100 text-navy hover:text-red-600 text-xl font-bold transition-all hover:scale-110"
+                onClick={() => setShowDailyTodoSidebar(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-lg bg-navy/10 hover:bg-red-100 text-navy hover:text-red-600 text-xl font-bold transition-all hover:scale-110 shadow-sm"
                 title="Zettel schließen"
               >
                 ✕
