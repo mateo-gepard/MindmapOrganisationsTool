@@ -91,9 +91,8 @@ export const MapView: React.FC = () => {
   React.useEffect(() => {
     if (currentView !== 'map') {
       setShowDailyTodoSidebar(false);
-    } else {
-      setShowDailyTodoSidebar(true);
     }
+    // Don't show it again when coming back to map view
   }, [currentView]);
 
   // Create all nodes - memoized to prevent unnecessary recreation
