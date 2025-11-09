@@ -26,7 +26,21 @@ export const DailyView: React.FC = () => {
   }, [dailyTodos]);
   
   // Count completed tasks
-  const completedCount = dailyTasks.filter((task) => task.completedAt).length;
+  // For large projects: count as completed if at least one subtask is done
+  const completedCount = dailyTasks.filter((task) => {
+    if (task.completedAt) return true;
+    
+    // For large projects, check if at least one subtask is completed
+    if (task.type === 'large' && taskDetails.has(task.id)) {
+      const details = taskDetails.get(task.id);
+      if (details && details.subtasks.length > 0) {
+        return details.subtasks.some(st => st.done);
+      }
+    }
+    
+    return false;
+  }).length;
+  
   const totalCount = dailyTasks.length;
   const progressPercentage = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
