@@ -615,7 +615,9 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   // Initialize Firebase listeners
   initializeFirebase: () => {
-    // Prevent multiple initializations
+    console.log('🔥 initializeFirebase called, isFirebaseInitialized:', isFirebaseInitialized);
+    
+    // Prevent multiple initializations WITHIN the same session
     if (isFirebaseInitialized) {
       console.log('⚠️ Firebase already initialized, skipping...');
       return;
