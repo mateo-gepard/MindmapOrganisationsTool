@@ -197,37 +197,69 @@ export const DailyView: React.FC = () => {
 
                     {/* Subtasks for large projects */}
                     {task.type === 'large' && taskDetails.has(task.id) && (
-                      <div className="mt-3 space-y-2">
-                        <div className="text-sm font-semibold text-navy/70">Teilaufgaben:</div>
-                        {taskDetails.get(task.id)?.subtasks.map((subtask) => (
-                          <div key={subtask.id} className="flex items-center gap-2">
-                            <button
-                              onClick={() => toggleSubtask(task.id, subtask.id)}
-                              className={`flex-shrink-0 w-5 h-5 rounded border-2 transition-all ${
-                                subtask.done
-                                  ? 'bg-gradient-to-br from-blue to-navy border-blue'
-                                  : 'border-navy/30 hover:border-blue'
-                              }`}
-                            >
-                              {subtask.done && (
-                                <svg
-                                  className="w-full h-full text-white"
-                                  fill="none"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="3"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                >
-                                  <path d="M5 13l4 4L19 7" />
-                                </svg>
-                              )}
-                            </button>
-                            <span className={`text-sm ${subtask.done ? 'line-through text-navy/50' : 'text-navy'}`}>
-                              {subtask.title}
-                            </span>
-                          </div>
-                        ))}
+                      <div className="mt-4 space-y-2 pl-2 border-l-2 border-blue/30">
+                        {(() => {
+                          const details = taskDetails.get(task.id);
+                          if (!details || details.subtasks.length === 0) return null;
+                          
+                          const completedSubtasks = details.subtasks.filter(st => st.done).length;
+                          const totalSubtasks = details.subtasks.length;
+                          const subtaskProgress = (completedSubtasks / totalSubtasks) * 100;
+                          
+                          return (
+                            <>
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="text-sm font-semibold text-navy/70">
+                                  Teilaufgaben ({completedSubtasks}/{totalSubtasks})
+                                </div>
+                                <div className="text-xs text-navy/50">
+                                  {subtaskProgress.toFixed(0)}%
+                                </div>
+                              </div>
+                              
+                              {/* Subtask Progress Bar */}
+                              <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden mb-3">
+                                <div
+                                  className="h-full bg-gradient-to-r from-blue to-navy transition-all duration-300"
+                                  style={{ width: `${subtaskProgress}%` }}
+                                />
+                              </div>
+                              
+                              {/* Subtask List */}
+                              <div className="space-y-2">
+                                {details.subtasks.map((subtask) => (
+                                  <div key={subtask.id} className="flex items-center gap-2 group">
+                                    <button
+                                      onClick={() => toggleSubtask(task.id, subtask.id)}
+                                      className={`flex-shrink-0 w-5 h-5 rounded border-2 transition-all ${
+                                        subtask.done
+                                          ? 'bg-gradient-to-br from-blue to-navy border-blue'
+                                          : 'border-navy/30 hover:border-blue group-hover:scale-110'
+                                      }`}
+                                    >
+                                      {subtask.done && (
+                                        <svg
+                                          className="w-full h-full text-white"
+                                          fill="none"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth="3"
+                                          viewBox="0 0 24 24"
+                                          stroke="currentColor"
+                                        >
+                                          <path d="M5 13l4 4L19 7" />
+                                        </svg>
+                                      )}
+                                    </button>
+                                    <span className={`text-sm flex-1 ${subtask.done ? 'line-through text-navy/50' : 'text-navy group-hover:text-blue'}`}>
+                                      {subtask.title}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
                     )}
 
