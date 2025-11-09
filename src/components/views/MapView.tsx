@@ -348,13 +348,13 @@ export const MapView: React.FC = () => {
               <span className="text-xl">✨</span>
               Daily To-Do
             </h3>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
               <button
                 onClick={() => {
                   setShowDailyTodoSidebar(false);
                   localStorage.setItem('showDailyTodoSidebar', 'false');
                 }}
-                className="text-navy/60 hover:text-navy text-sm font-medium transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-lg bg-navy/10 hover:bg-red-100 text-navy hover:text-red-600 text-xl font-bold transition-all hover:scale-110"
                 title="Zettel schließen"
               >
                 ✕
