@@ -6,6 +6,12 @@ export const DailyView: React.FC = () => {
 
   const dailyTasks = tasks.filter((task) => dailyTodos.includes(task.id));
   
+  // Debug: Log taskDetails
+  React.useEffect(() => {
+    console.log('DailyView - taskDetails size:', taskDetails.size);
+    console.log('DailyView - taskDetails:', taskDetails);
+  }, [taskDetails]);
+  
   // Count completed tasks
   const completedCount = dailyTasks.filter((task) => task.completedAt).length;
   const totalCount = dailyTasks.length;

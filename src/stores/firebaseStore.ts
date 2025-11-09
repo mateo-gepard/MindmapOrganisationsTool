@@ -53,7 +53,11 @@ interface AppState {
   updateTaskDetail: (taskId: string, detail: Partial<TaskDetail>) => void;
   addSubtask: (taskId: string, title: string) => void;
   toggleSubtask: (taskId: string, subtaskId: string) => void;
+  deleteSubtask: (taskId: string, subtaskId: string) => void;
+  updateSubtask: (taskId: string, subtaskId: string, title: string) => void;
   addMilestone: (taskId: string, title: string, targetDate: Date) => void;
+  deleteMilestone: (taskId: string, milestoneId: string) => void;
+  updateMilestone: (taskId: string, milestoneId: string, title: string, targetDate: Date) => void;
 
   // Recurrence operations
   setRecurrence: (taskId: string, recurrence: Omit<Recurrence, 'taskId'>) => void;
@@ -360,6 +364,69 @@ export const useAppStore = create<AppState>((set, get) => ({
         newTaskDetails.set(taskId, {
           ...existing,
           milestones: [...existing.milestones, newMilestone],
+        });
+      }
+      return { taskDetails: newTaskDetails };
+    }),
+
+  deleteSubtask: (taskId, subtaskId) =>
+    set((state) => {
+      const newTaskDetails = new Map(state.taskDetails);
+      const existing = newTaskDetails.get(taskId);
+      if (existing) {
+        const updatedSubtasks = existing.subtasks.filter((st) => st.id !== subtaskId);
+        const completedCount = updatedSubtasks.filter((st) => st.done).length;
+        const progress = updatedSubtasks.length > 0 ? (completedCount / updatedSubtasks.length) * 100 : 0;
+
+        newTaskDetails.set(taskId, {
+          ...existing,
+          subtasks: updatedSubtasks,
+          progress: Math.round(progress),
+        });
+      }
+      return { taskDetails: newTaskDetails };
+    }),
+
+  updateSubtask: (taskId, subtaskId, title) =>
+    set((state) => {
+      const newTaskDetails = new Map(state.taskDetails);
+      const existing = newTaskDetails.get(taskId);
+      if (existing) {
+        const updatedSubtasks = existing.subtasks.map((st) =>
+          st.id === subtaskId ? { ...st, title } : st
+        );
+        newTaskDetails.set(taskId, {
+          ...existing,
+          subtasks: updatedSubtasks,
+        });
+      }
+      return { taskDetails: newTaskDetails };
+    }),
+
+  deleteMilestone: (taskId, milestoneId) =>
+    set((state) => {
+      const newTaskDetails = new Map(state.taskDetails);
+      const existing = newTaskDetails.get(taskId);
+      if (existing) {
+        newTaskDetails.set(taskId, {
+          ...existing,
+          milestones: existing.milestones.filter((m) => m.id !== milestoneId),
+        });
+      }
+      return { taskDetails: newTaskDetails };
+    }),
+
+  updateMilestone: (taskId, milestoneId, title, targetDate) =>
+    set((state) => {
+      const newTaskDetails = new Map(state.taskDetails);
+      const existing = newTaskDetails.get(taskId);
+      if (existing) {
+        const updatedMilestones = existing.milestones.map((m) =>
+          m.id === milestoneId ? { ...m, title, targetDate } : m
+        );
+        newTaskDetails.set(taskId, {
+          ...existing,
+          milestones: updatedMilestones,
         });
       }
       return { taskDetails: newTaskDetails };
