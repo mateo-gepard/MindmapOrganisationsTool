@@ -90,6 +90,9 @@ const defaultFilters: FilterConfig = {
   focusMode: false,
 };
 
+// Guard to prevent multiple initializations
+let isFirebaseInitialized = false;
+
 export const useAppStore = create<AppState>((set, get) => ({
   // Initial state
   currentUser: null,
@@ -606,8 +609,15 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   // Initialize Firebase listeners
   initializeFirebase: () => {
+    // Prevent multiple initializations
+    if (isFirebaseInitialized) {
+      console.log('⚠️ Firebase already initialized, skipping...');
+      return;
+    }
+    
     try {
-      console.log('Initializing Firebase connections...');
+      console.log('🚀 Initializing Firebase connections...');
+      isFirebaseInitialized = true;
       
       // Subscribe to user data (daily todos) FIRST
       firestoreUserData.subscribe((data) => {

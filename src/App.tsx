@@ -15,9 +15,13 @@ function App() {
 
   // Check for existing username on app start
   useEffect(() => {
+    console.log('🔄 App.tsx useEffect - Checking for saved username...');
     const savedUsername = localStorage.getItem('mindmap-username');
+    console.log('Saved username:', savedUsername);
+    
     if (savedUsername) {
       setCurrentUser(savedUsername);
+      console.log('🚀 Calling initializeFirebase...');
       initializeFirebase();
     } else {
       setShowLogin(true);
