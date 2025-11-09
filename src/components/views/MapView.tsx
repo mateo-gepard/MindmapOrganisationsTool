@@ -76,6 +76,7 @@ export const MapView: React.FC = () => {
   const [projectDetailTask, setProjectDetailTask] = useState<Task | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [fabExpanded, setFabExpanded] = useState(false);
+  const [showDailyTodoSidebar, setShowDailyTodoSidebar] = useState(true);
 
   // Reset daily planning mode when leaving MapView
   React.useEffect(() => {
@@ -85,6 +86,15 @@ export const MapView: React.FC = () => {
       }
     };
   }, [isDailyPlanningMode, setDailyPlanningMode]);
+
+  // Hide daily todo sidebar when switching views
+  React.useEffect(() => {
+    if (currentView !== 'map') {
+      setShowDailyTodoSidebar(false);
+    } else {
+      setShowDailyTodoSidebar(true);
+    }
+  }, [currentView]);
 
   // Create all nodes - memoized to prevent unnecessary recreation
   const allNodes: Node[] = React.useMemo(() => {
@@ -324,7 +334,7 @@ export const MapView: React.FC = () => {
       )}
 
       {/* Daily To-Do Sidebar */}
-      {dailyTodos.length > 0 && currentView === 'map' && (
+      {dailyTodos.length > 0 && currentView === 'map' && showDailyTodoSidebar && (
         <div className="absolute top-4 right-4 w-80 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-blue/30 p-5 max-h-[calc(100vh-2rem)] overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-bold bg-gradient-to-r from-blue to-navy bg-clip-text text-transparent flex items-center gap-2">
