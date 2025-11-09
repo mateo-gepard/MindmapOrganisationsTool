@@ -90,7 +90,8 @@ const defaultFilters: FilterConfig = {
   focusMode: false,
 };
 
-// Guard to prevent multiple initializations
+// Guard to prevent multiple initializations WITHIN the same session
+// Reset on module reload (page refresh)
 let isFirebaseInitialized = false;
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -110,6 +111,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   setCurrentUser: (username) => {
     set({ currentUser: username });
     localStorage.setItem('mindmap-username', username);
+    // Reset initialization guard for new user
+    console.log('🔄 New user set, resetting Firebase initialization guard');
+    isFirebaseInitialized = false;
     // Reinitialize Firebase with new user
     get().initializeFirebase();
   },

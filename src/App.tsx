@@ -20,17 +20,20 @@ function App() {
     console.log('Saved username:', savedUsername);
     
     if (savedUsername) {
+      console.log('✅ Found saved username, setting current user...');
       setCurrentUser(savedUsername);
-      console.log('🚀 Calling initializeFirebase...');
-      initializeFirebase();
+      // Note: setCurrentUser already calls initializeFirebase()
     } else {
+      console.log('⚠️ No saved username, showing login modal');
       setShowLogin(true);
     }
-  }, [setCurrentUser, initializeFirebase]);
+  }, []); // Empty dependency array - only run once on mount
 
   const handleLogin = (username: string) => {
     setCurrentUser(username);
     setShowLogin(false);
+    console.log('🚀 User logged in, calling initializeFirebase...');
+    initializeFirebase();
   };
 
   if (showLogin) {
