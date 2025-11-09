@@ -59,10 +59,10 @@ interface AppState {
 
 // Default areas configuration - circles with all four small circles overlapping
 const defaultAreas: Area[] = [
-  { id: 'school', name: 'Schule', color: '#003049', position: { x: 340, y: 300 }, radius: 160 },
-  { id: 'sport', name: 'Sport', color: '#669bbc', position: { x: 460, y: 300 }, radius: 160 },
-  { id: 'business', name: 'Geschäft', color: '#c1121f', position: { x: 340, y: 380 }, radius: 160 },
-  { id: 'projects', name: 'Projekte', color: '#780000', position: { x: 460, y: 380 }, radius: 160 },
+  { id: 'school', name: 'Schule', color: '#003049', position: { x: 350, y: 310 }, radius: 160 },
+  { id: 'sport', name: 'Sport', color: '#669bbc', position: { x: 450, y: 310 }, radius: 160 },
+  { id: 'business', name: 'Geschäft', color: '#c1121f', position: { x: 350, y: 370 }, radius: 160 },
+  { id: 'projects', name: 'Projekte', color: '#780000', position: { x: 450, y: 370 }, radius: 160 },
   { id: 'leisure', name: 'Freizeitaktivitäten', color: '#669bbc', position: { x: 400, y: 340 }, radius: 400 },
 ];
 
