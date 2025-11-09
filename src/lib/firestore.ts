@@ -210,12 +210,12 @@ export const firestoreUserData = {
     const docRef = doc(db, USER_DATA_COLLECTION, userId);
     
     try {
-      // Use setDoc with merge to create or update the document
+      // Only update lastAccess, don't touch dailyTodos
+      // This prevents overwriting existing daily todos on app reload
       await setDoc(docRef, { 
         lastAccess: new Date(),
-        dailyTodos: []
       }, { merge: true });
-      console.log('User data initialized successfully');
+      console.log('User data initialized successfully (dailyTodos preserved)');
     } catch (error) {
       console.error('Error initializing user data:', error);
     }
