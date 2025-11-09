@@ -50,14 +50,14 @@ interface AppState {
   toggleTaskComplete: (id: string, fromDailyView?: boolean) => Promise<void>;
 
   // Large task operations
-  updateTaskDetail: (taskId: string, detail: Partial<TaskDetail>) => void;
-  addSubtask: (taskId: string, title: string) => void;
-  toggleSubtask: (taskId: string, subtaskId: string) => void;
-  deleteSubtask: (taskId: string, subtaskId: string) => void;
-  updateSubtask: (taskId: string, subtaskId: string, title: string) => void;
-  addMilestone: (taskId: string, title: string, targetDate: Date) => void;
-  deleteMilestone: (taskId: string, milestoneId: string) => void;
-  updateMilestone: (taskId: string, milestoneId: string, title: string, targetDate: Date) => void;
+  updateTaskDetail: (taskId: string, detail: Partial<TaskDetail>) => Promise<void>;
+  addSubtask: (taskId: string, title: string) => Promise<void>;
+  toggleSubtask: (taskId: string, subtaskId: string) => Promise<void>;
+  deleteSubtask: (taskId: string, subtaskId: string) => Promise<void>;
+  updateSubtask: (taskId: string, subtaskId: string, title: string) => Promise<void>;
+  addMilestone: (taskId: string, title: string, targetDate: Date) => Promise<void>;
+  deleteMilestone: (taskId: string, milestoneId: string) => Promise<void>;
+  updateMilestone: (taskId: string, milestoneId: string, title: string, targetDate: Date) => Promise<void>;
 
   // Recurrence operations
   setRecurrence: (taskId: string, recurrence: Omit<Recurrence, 'taskId'>) => void;
@@ -288,8 +288,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  // Large task operations (kept for local state management)
-  updateTaskDetail: (taskId, detail) =>
+  // Large task operations (Firebase-enabled)
+  updateTaskDetail: async (taskId, detail) => {
     set((state) => {
       const newTaskDetails = new Map(state.taskDetails);
       const existing = newTaskDetails.get(taskId);
@@ -297,140 +297,192 @@ export const useAppStore = create<AppState>((set, get) => ({
         newTaskDetails.set(taskId, { ...existing, ...detail });
       }
       return { taskDetails: newTaskDetails };
-    }),
+    });
+    // Update in Firebase
+    await firestoreTaskDetails.update(taskId, detail);
+  },
 
-  addSubtask: (taskId: string, title: string) =>
-    set((state) => {
-      const newTaskDetails = new Map(state.taskDetails);
-      const existing = newTaskDetails.get(taskId);
-      if (existing) {
-        const maxOrder = Math.max(
-          ...existing.subtasks.map(st => st.order),
-          ...existing.milestones.map(m => m.order),
-          -1
-        );
-        const newSubtask = {
-          id: `subtask-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          title,
-          done: false,
-          createdAt: new Date(),
-          order: maxOrder + 1,
-        };
+  addSubtask: async (taskId: string, title: string) => {
+    const state = get();
+    const existing = state.taskDetails.get(taskId);
+    if (existing) {
+      const maxOrder = Math.max(
+        ...existing.subtasks.map(st => st.order),
+        ...existing.milestones.map(m => m.order),
+        -1
+      );
+      const newSubtask = {
+        id: `subtask-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        title,
+        done: false,
+        createdAt: new Date(),
+        order: maxOrder + 1,
+      };
+      const updatedSubtasks = [...existing.subtasks, newSubtask];
+      
+      set((state) => {
+        const newTaskDetails = new Map(state.taskDetails);
         newTaskDetails.set(taskId, {
           ...existing,
-          subtasks: [...existing.subtasks, newSubtask],
+          subtasks: updatedSubtasks,
         });
-      }
-      return { taskDetails: newTaskDetails };
-    }),
+        return { taskDetails: newTaskDetails };
+      });
+      
+      // Update in Firebase
+      await firestoreTaskDetails.update(taskId, { subtasks: updatedSubtasks });
+    }
+  },
 
-  toggleSubtask: (taskId, subtaskId) =>
-    set((state) => {
-      const newTaskDetails = new Map(state.taskDetails);
-      const existing = newTaskDetails.get(taskId);
-      if (existing) {
-        const updatedSubtasks = existing.subtasks.map((st) =>
-          st.id === subtaskId ? { ...st, done: !st.done } : st
-        );
-        const completedCount = updatedSubtasks.filter((st) => st.done).length;
-        const progress = updatedSubtasks.length > 0 ? (completedCount / updatedSubtasks.length) * 100 : 0;
+  toggleSubtask: async (taskId, subtaskId) => {
+    const state = get();
+    const existing = state.taskDetails.get(taskId);
+    if (existing) {
+      const updatedSubtasks = existing.subtasks.map((st) =>
+        st.id === subtaskId ? { ...st, done: !st.done } : st
+      );
+      const completedCount = updatedSubtasks.filter((st) => st.done).length;
+      const progress = updatedSubtasks.length > 0 ? (completedCount / updatedSubtasks.length) * 100 : 0;
 
+      set((state) => {
+        const newTaskDetails = new Map(state.taskDetails);
         newTaskDetails.set(taskId, {
           ...existing,
           subtasks: updatedSubtasks,
           progress: Math.round(progress),
         });
-      }
-      return { taskDetails: newTaskDetails };
-    }),
+        return { taskDetails: newTaskDetails };
+      });
+      
+      // Update in Firebase
+      await firestoreTaskDetails.update(taskId, { 
+        subtasks: updatedSubtasks,
+        progress: Math.round(progress)
+      });
+    }
+  },
 
-  addMilestone: (taskId: string, title: string, targetDate: Date) =>
-    set((state) => {
-      const newTaskDetails = new Map(state.taskDetails);
-      const existing = newTaskDetails.get(taskId);
-      if (existing) {
-        const maxOrder = Math.max(
-          ...existing.subtasks.map(st => st.order),
-          ...existing.milestones.map(m => m.order),
-          -1
-        );
-        const newMilestone = {
-          id: `milestone-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          title,
-          targetDate,
-          completed: false,
-          order: maxOrder + 1,
-        };
-        newTaskDetails.set(taskId, {
-          ...existing,
-          milestones: [...existing.milestones, newMilestone],
-        });
-      }
-      return { taskDetails: newTaskDetails };
-    }),
-
-  deleteSubtask: (taskId, subtaskId) =>
-    set((state) => {
-      const newTaskDetails = new Map(state.taskDetails);
-      const existing = newTaskDetails.get(taskId);
-      if (existing) {
-        const updatedSubtasks = existing.subtasks.filter((st) => st.id !== subtaskId);
-        const completedCount = updatedSubtasks.filter((st) => st.done).length;
-        const progress = updatedSubtasks.length > 0 ? (completedCount / updatedSubtasks.length) * 100 : 0;
-
-        newTaskDetails.set(taskId, {
-          ...existing,
-          subtasks: updatedSubtasks,
-          progress: Math.round(progress),
-        });
-      }
-      return { taskDetails: newTaskDetails };
-    }),
-
-  updateSubtask: (taskId, subtaskId, title) =>
-    set((state) => {
-      const newTaskDetails = new Map(state.taskDetails);
-      const existing = newTaskDetails.get(taskId);
-      if (existing) {
-        const updatedSubtasks = existing.subtasks.map((st) =>
-          st.id === subtaskId ? { ...st, title } : st
-        );
-        newTaskDetails.set(taskId, {
-          ...existing,
-          subtasks: updatedSubtasks,
-        });
-      }
-      return { taskDetails: newTaskDetails };
-    }),
-
-  deleteMilestone: (taskId, milestoneId) =>
-    set((state) => {
-      const newTaskDetails = new Map(state.taskDetails);
-      const existing = newTaskDetails.get(taskId);
-      if (existing) {
-        newTaskDetails.set(taskId, {
-          ...existing,
-          milestones: existing.milestones.filter((m) => m.id !== milestoneId),
-        });
-      }
-      return { taskDetails: newTaskDetails };
-    }),
-
-  updateMilestone: (taskId, milestoneId, title, targetDate) =>
-    set((state) => {
-      const newTaskDetails = new Map(state.taskDetails);
-      const existing = newTaskDetails.get(taskId);
-      if (existing) {
-        const updatedMilestones = existing.milestones.map((m) =>
-          m.id === milestoneId ? { ...m, title, targetDate } : m
-        );
+  addMilestone: async (taskId: string, title: string, targetDate: Date) => {
+    const state = get();
+    const existing = state.taskDetails.get(taskId);
+    if (existing) {
+      const maxOrder = Math.max(
+        ...existing.subtasks.map(st => st.order),
+        ...existing.milestones.map(m => m.order),
+        -1
+      );
+      const newMilestone = {
+        id: `milestone-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        title,
+        targetDate,
+        completed: false,
+        order: maxOrder + 1,
+      };
+      const updatedMilestones = [...existing.milestones, newMilestone];
+      
+      set((state) => {
+        const newTaskDetails = new Map(state.taskDetails);
         newTaskDetails.set(taskId, {
           ...existing,
           milestones: updatedMilestones,
         });
-      }
-      return { taskDetails: newTaskDetails };
-    }),
+        return { taskDetails: newTaskDetails };
+      });
+      
+      // Update in Firebase
+      await firestoreTaskDetails.update(taskId, { milestones: updatedMilestones });
+    }
+  },
+
+  deleteSubtask: async (taskId, subtaskId) => {
+    const state = get();
+    const existing = state.taskDetails.get(taskId);
+    if (existing) {
+      const updatedSubtasks = existing.subtasks.filter((st) => st.id !== subtaskId);
+      const completedCount = updatedSubtasks.filter((st) => st.done).length;
+      const progress = updatedSubtasks.length > 0 ? (completedCount / updatedSubtasks.length) * 100 : 0;
+
+      set((state) => {
+        const newTaskDetails = new Map(state.taskDetails);
+        newTaskDetails.set(taskId, {
+          ...existing,
+          subtasks: updatedSubtasks,
+          progress: Math.round(progress),
+        });
+        return { taskDetails: newTaskDetails };
+      });
+      
+      // Update in Firebase
+      await firestoreTaskDetails.update(taskId, { 
+        subtasks: updatedSubtasks,
+        progress: Math.round(progress)
+      });
+    }
+  },
+
+  updateSubtask: async (taskId, subtaskId, title) => {
+    const state = get();
+    const existing = state.taskDetails.get(taskId);
+    if (existing) {
+      const updatedSubtasks = existing.subtasks.map((st) =>
+        st.id === subtaskId ? { ...st, title } : st
+      );
+      
+      set((state) => {
+        const newTaskDetails = new Map(state.taskDetails);
+        newTaskDetails.set(taskId, {
+          ...existing,
+          subtasks: updatedSubtasks,
+        });
+        return { taskDetails: newTaskDetails };
+      });
+      
+      // Update in Firebase
+      await firestoreTaskDetails.update(taskId, { subtasks: updatedSubtasks });
+    }
+  },
+
+  deleteMilestone: async (taskId, milestoneId) => {
+    const state = get();
+    const existing = state.taskDetails.get(taskId);
+    if (existing) {
+      const updatedMilestones = existing.milestones.filter((m) => m.id !== milestoneId);
+      
+      set((state) => {
+        const newTaskDetails = new Map(state.taskDetails);
+        newTaskDetails.set(taskId, {
+          ...existing,
+          milestones: updatedMilestones,
+        });
+        return { taskDetails: newTaskDetails };
+      });
+      
+      // Update in Firebase
+      await firestoreTaskDetails.update(taskId, { milestones: updatedMilestones });
+    }
+  },
+
+  updateMilestone: async (taskId, milestoneId, title, targetDate) => {
+    const state = get();
+    const existing = state.taskDetails.get(taskId);
+    if (existing) {
+      const updatedMilestones = existing.milestones.map((m) =>
+        m.id === milestoneId ? { ...m, title, targetDate } : m
+      );
+      
+      set((state) => {
+        const newTaskDetails = new Map(state.taskDetails);
+        newTaskDetails.set(taskId, {
+          ...existing,
+          milestones: updatedMilestones,
+        });
+        return { taskDetails: newTaskDetails };
+      });
+      
+      // Update in Firebase
+      await firestoreTaskDetails.update(taskId, { milestones: updatedMilestones });
+    }
+  },
 
   // Recurrence operations (local for now)
   setRecurrence: (taskId, recurrence) =>
