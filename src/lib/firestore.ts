@@ -173,13 +173,24 @@ export const firestoreUserData = {
     const userId = getCurrentUserId();
     const docRef = doc(db, USER_DATA_COLLECTION, userId);
     
-    return onSnapshot(docRef, (doc) => {
-      if (doc.exists()) {
-        callback(doc.data() as { dailyTodos: string[] });
-      } else {
+    console.log(`🔄 Starting userData subscription for user: ${userId}`);
+    
+    return onSnapshot(docRef, 
+      (doc) => {
+        if (doc.exists()) {
+          const data = doc.data() as { dailyTodos: string[] };
+          console.log(`✅ UserData snapshot received: ${data.dailyTodos?.length || 0} daily todos`);
+          callback(data);
+        } else {
+          console.log('⚠️ UserData document does not exist, returning empty array');
+          callback({ dailyTodos: [] });
+        }
+      },
+      (error) => {
+        console.error('❌ UserData subscription error:', error);
         callback({ dailyTodos: [] });
       }
-    });
+    );
   },
 
   updateDailyTodos: async (dailyTodos: string[]) => {

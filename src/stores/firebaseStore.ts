@@ -121,16 +121,20 @@ export const useAppStore = create<AppState>((set, get) => ({
     const state = get();
     if (!state.dailyTodos.includes(taskId)) {
       const newDailyTodos = [...state.dailyTodos, taskId];
+      console.log(`📝 Adding task to daily todos: ${taskId}. Total: ${newDailyTodos.length}`);
       set({ dailyTodos: newDailyTodos });
       await firestoreUserData.updateDailyTodos(newDailyTodos);
+      console.log(`✅ Daily todos saved to Firebase: ${newDailyTodos.length} items`);
     }
   },
   
   removeFromDailyTodos: async (taskId) => {
     const state = get();
     const newDailyTodos = state.dailyTodos.filter((id) => id !== taskId);
+    console.log(`🗑️ Removing task from daily todos: ${taskId}. Remaining: ${newDailyTodos.length}`);
     set({ dailyTodos: newDailyTodos });
     await firestoreUserData.updateDailyTodos(newDailyTodos);
+    console.log(`✅ Daily todos updated in Firebase`);
   },
   
   clearDailyTodos: async () => {
@@ -605,7 +609,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       console.log('Initializing Firebase connections...');
       
-      // Initialize user data
+      // Subscribe to user data (daily todos) FIRST
+      firestoreUserData.subscribe((data) => {
+        console.log(`📥 Firebase subscriber triggered: Received ${data.dailyTodos.length} daily todos`);
+        console.log('Daily todos IDs:', data.dailyTodos);
+        set({ dailyTodos: data.dailyTodos });
+      });
+      
+      // THEN Initialize user data document
       firestoreUserData.initialize().catch(console.error);
 
       // Subscribe to tasks
@@ -626,12 +637,6 @@ export const useAppStore = create<AppState>((set, get) => ({
         });
         console.log(`Received ${taskDetailsMap.size} task details from Firebase`);
         set({ taskDetails: taskDetailsMap });
-      });
-
-      // Subscribe to user data (daily todos)
-      firestoreUserData.subscribe((data) => {
-        console.log(`Received daily todos: ${data.dailyTodos.length} items`);
-        set({ dailyTodos: data.dailyTodos });
       });
       
       // Set up interval for midnight cleanup (runs every 15 minutes, but only executes at midnight)
