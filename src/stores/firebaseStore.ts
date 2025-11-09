@@ -28,7 +28,8 @@ interface AppState {
   addToDailyTodos: (taskId: string) => void;
   removeFromDailyTodos: (taskId: string) => void;
   clearDailyTodos: () => void;
-  cleanupDailyTodos: () => Promise<void>;
+  midnightCleanup: () => Promise<void>;
+  eveningCleanup: () => Promise<void>;
 
   // Tasks
   tasks: Task[];
@@ -138,9 +139,18 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   // Clean up completed tasks from daily todos (called on app start)
-  cleanupDailyTodos: async () => {
+  // Midnight cleanup - wipe all daily todos at midnight (00:00)
+  midnightCleanup: async () => {
     const state = get();
-    const today = new Date();
+    const now = new Date();
+    const currentHour = now.getHours();
+    
+    // Only run between 00:00 and 00:59
+    if (currentHour !== 0) {
+      return;
+    }
+    
+    const today = new Date(now);
     today.setHours(0, 0, 0, 0);
     
     // Check if we've already cleaned today
@@ -155,13 +165,74 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
     }
     
-    // Complete daily wipe - clear all tasks from daily plan
-    console.log(`🧹 Daily wipe: Clearing all ${state.dailyTodos.length} tasks from daily plan`);
+    // It's midnight of a new day - wipe the daily todos
+    console.log(`🌙 Midnight wipe: Clearing all ${state.dailyTodos.length} tasks from daily plan (new day)`);
     set({ dailyTodos: [] });
     await firestoreUserData.updateDailyTodos([]);
     
     // Mark today as cleaned
     localStorage.setItem('dailyTodos-lastCleanup', today.toISOString());
+  },
+
+  // Evening cleanup - remove completed tasks (called by interval)
+  eveningCleanup: async () => {
+    const state = get();
+    const now = new Date();
+    const hour = now.getHours();
+    
+    // Only run between 8 PM (20:00) and 11:59 PM (23:59)
+    if (hour < 20) {
+      return;
+    }
+    
+    // Check if we've already done evening cleanup today
+    const lastEveningCleanup = localStorage.getItem('dailyTodos-lastEveningCleanup');
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+    
+    if (lastEveningCleanup) {
+      const lastCleanupDate = new Date(lastEveningCleanup);
+      lastCleanupDate.setHours(0, 0, 0, 0);
+      if (lastCleanupDate.getTime() === today.getTime()) {
+        // Already cleaned this evening
+        return;
+      }
+    }
+    
+    // Remove completed tasks from daily plan
+    const remainingTasks: string[] = [];
+    
+    for (const taskId of state.dailyTodos) {
+      const task = state.tasks.find(t => t.id === taskId);
+      if (!task) continue;
+      
+      // Keep unfinished tasks
+      if (!task.completedAt) {
+        remainingTasks.push(taskId);
+      }
+      // For large projects: keep if there are unfinished subtasks
+      else if (task.type === 'large') {
+        const details = state.taskDetails.get(taskId);
+        const hasUnfinishedSubtasks = details?.subtasks.some(st => !st.done);
+        if (hasUnfinishedSubtasks) {
+          remainingTasks.push(taskId);
+        }
+      }
+      // For repetitive tasks: always keep them
+      else if (task.type === 'repetitive') {
+        remainingTasks.push(taskId);
+      }
+      // One-time tasks that are completed: remove them
+    }
+    
+    if (remainingTasks.length !== state.dailyTodos.length) {
+      console.log(`🌙 Evening cleanup: Removed ${state.dailyTodos.length - remainingTasks.length} completed tasks from daily plan`);
+      set({ dailyTodos: remainingTasks });
+      await firestoreUserData.updateDailyTodos(remainingTasks);
+      
+      // Mark evening cleanup as done for today
+      localStorage.setItem('dailyTodos-lastEveningCleanup', now.toISOString());
+    }
   },
 
   // Filter management
@@ -561,10 +632,17 @@ export const useAppStore = create<AppState>((set, get) => ({
       firestoreUserData.subscribe((data) => {
         console.log(`Received daily todos: ${data.dailyTodos.length} items`);
         set({ dailyTodos: data.dailyTodos });
-        
-        // Clean up completed tasks from daily todos (once per day)
-        get().cleanupDailyTodos().catch(console.error);
       });
+      
+      // Set up interval for midnight cleanup (runs every 15 minutes, but only executes at midnight)
+      setInterval(() => {
+        get().midnightCleanup().catch(console.error);
+      }, 15 * 60 * 1000); // Every 15 minutes
+      
+      // Set up interval for evening cleanup (runs every 15 minutes, but only executes 8 PM - midnight)
+      setInterval(() => {
+        get().eveningCleanup().catch(console.error);
+      }, 15 * 60 * 1000); // Every 15 minutes
       
       console.log('Firebase initialization completed successfully');
     } catch (error) {
