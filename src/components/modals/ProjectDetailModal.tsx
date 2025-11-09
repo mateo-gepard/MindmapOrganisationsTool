@@ -12,13 +12,26 @@ type TaskItem =
   | { type: 'milestone'; data: Milestone; index: number };
 
 export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ task, onClose }) => {
-  const { taskDetails, updateTaskDetail, addSubtask, toggleSubtask, addMilestone } = useAppStore();
+  const { 
+    taskDetails, 
+    updateTaskDetail, 
+    addSubtask, 
+    toggleSubtask, 
+    addMilestone,
+    deleteSubtask,
+    updateSubtask,
+    deleteMilestone,
+    updateMilestone
+  } = useAppStore();
   const [newItemTitle, setNewItemTitle] = useState('');
   const [newItemType, setNewItemType] = useState<'subtask' | 'milestone'>('subtask');
   const [newMilestoneDate, setNewMilestoneDate] = useState('');
   const [editingGoal, setEditingGoal] = useState(false);
   const [goalText, setGoalText] = useState('');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [editingItem, setEditingItem] = useState<{ type: 'subtask' | 'milestone'; id: string } | null>(null);
+  const [editingTitle, setEditingTitle] = useState('');
+  const [editingDate, setEditingDate] = useState('');
 
   const detail = taskDetails.get(task.id);
   
@@ -316,33 +329,131 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ task, on
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="text-yellow-600 font-bold">🏁</span>
-                            <span
-                              className={`font-bold ${
-                                item.data.completed ? 'line-through text-gray-500' : 'text-gray-900'
-                              }`}
-                            >
-                              {item.data.title}
-                            </span>
+                            {editingItem?.type === 'milestone' && editingItem?.id === item.data.id ? (
+                              <div className="flex gap-2 flex-1">
+                                <input
+                                  type="text"
+                                  value={editingTitle}
+                                  onChange={(e) => setEditingTitle(e.target.value)}
+                                  className="flex-1 px-2 py-1 border rounded text-sm"
+                                  autoFocus
+                                />
+                                <input
+                                  type="date"
+                                  value={editingDate}
+                                  onChange={(e) => setEditingDate(e.target.value)}
+                                  className="px-2 py-1 border rounded text-sm"
+                                />
+                                <button
+                                  onClick={() => {
+                                    if (editingTitle.trim()) {
+                                      updateMilestone(task.id, item.data.id, editingTitle, new Date(editingDate));
+                                      setEditingItem(null);
+                                    }
+                                  }}
+                                  className="px-2 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
+                                >
+                                  ✓
+                                </button>
+                                <button
+                                  onClick={() => setEditingItem(null)}
+                                  className="px-2 py-1 bg-gray-300 text-gray-700 rounded text-sm hover:bg-gray-400"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ) : (
+                              <span
+                                className={`font-bold ${
+                                  item.data.completed ? 'line-through text-gray-500' : 'text-gray-900'
+                                }`}
+                              >
+                                {item.data.title}
+                              </span>
+                            )}
                           </div>
-                          {item.data.targetDate && (
+                          {item.data.targetDate && !(editingItem?.type === 'milestone' && editingItem?.id === item.data.id) && (
                             <p className="text-xs text-gray-500 ml-6">
                               Zieldatum: {new Date(item.data.targetDate).toLocaleDateString('de-DE')}
                             </p>
                           )}
                         </div>
                       ) : (
-                        <span
-                          className={`${
-                            item.data.done ? 'line-through text-gray-500' : 'text-gray-900'
-                          }`}
-                        >
-                          {item.data.title}
-                        </span>
+                        editingItem?.type === 'subtask' && editingItem?.id === item.data.id ? (
+                          <div className="flex gap-2 flex-1">
+                            <input
+                              type="text"
+                              value={editingTitle}
+                              onChange={(e) => setEditingTitle(e.target.value)}
+                              className="flex-1 px-2 py-1 border rounded text-sm"
+                              autoFocus
+                            />
+                            <button
+                              onClick={() => {
+                                if (editingTitle.trim()) {
+                                  updateSubtask(task.id, item.data.id, editingTitle);
+                                  setEditingItem(null);
+                                }
+                              }}
+                              className="px-2 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
+                            >
+                              ✓
+                            </button>
+                            <button
+                              onClick={() => setEditingItem(null)}
+                              className="px-2 py-1 bg-gray-300 text-gray-700 rounded text-sm hover:bg-gray-400"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ) : (
+                          <span
+                            className={`${
+                              item.data.done ? 'line-through text-gray-500' : 'text-gray-900'
+                            }`}
+                          >
+                            {item.data.title}
+                          </span>
+                        )
                       )}
                     </div>
 
+                    {/* Action buttons */}
+                    {!editingItem && (
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => {
+                            setEditingItem({ type: item.type, id: item.data.id });
+                            setEditingTitle(item.data.title);
+                            if (item.type === 'milestone' && item.data.targetDate) {
+                              setEditingDate(new Date(item.data.targetDate).toISOString().split('T')[0]);
+                            }
+                          }}
+                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                          title="Bearbeiten"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`${item.type === 'milestone' ? 'Meilenstein' : 'Teilaufgabe'} "${item.data.title}" wirklich löschen?`)) {
+                              if (item.type === 'milestone') {
+                                deleteMilestone(task.id, item.data.id);
+                              } else {
+                                deleteSubtask(task.id, item.data.id);
+                              }
+                            }
+                          }}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                          title="Löschen"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    )}
+
                     {/* Created date for subtasks */}
-                    {item.type === 'subtask' && (
+                    {item.type === 'subtask' && !editingItem && (
                       <span className="text-xs text-gray-400">
                         {new Date(item.data.createdAt).toLocaleDateString('de-DE')}
                       </span>
