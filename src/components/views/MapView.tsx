@@ -80,7 +80,9 @@ export const MapView: React.FC = () => {
   // Use localStorage to persist the sidebar visibility state
   const [showDailyTodoSidebar, setShowDailyTodoSidebar] = useState(() => {
     const saved = localStorage.getItem('showDailyTodoSidebar');
-    return saved !== null ? saved === 'true' : true;
+    const shouldShow = saved !== null ? saved === 'true' : true;
+    console.log('Daily sidebar initial state:', shouldShow, 'localStorage value:', saved);
+    return shouldShow;
   });
 
   // Reset daily planning mode when leaving MapView
@@ -95,6 +97,7 @@ export const MapView: React.FC = () => {
   // Hide daily todo sidebar when switching views
   React.useEffect(() => {
     if (currentView !== 'map') {
+      console.log('Hiding daily sidebar - view changed to:', currentView);
       setShowDailyTodoSidebar(false);
       localStorage.setItem('showDailyTodoSidebar', 'false');
     }
@@ -345,12 +348,24 @@ export const MapView: React.FC = () => {
               <span className="text-xl">✨</span>
               Daily To-Do
             </h3>
-            <button
-              onClick={clearDailyTodos}
-              className="text-navy/60 hover:text-red-600 text-sm font-medium transition-colors"
-            >
-              Alle löschen
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setShowDailyTodoSidebar(false);
+                  localStorage.setItem('showDailyTodoSidebar', 'false');
+                }}
+                className="text-navy/60 hover:text-navy text-sm font-medium transition-colors"
+                title="Zettel schließen"
+              >
+                ✕
+              </button>
+              <button
+                onClick={clearDailyTodos}
+                className="text-navy/60 hover:text-red-600 text-sm font-medium transition-colors"
+              >
+                Alle löschen
+              </button>
+            </div>
           </div>
 
           <div className="space-y-2.5">
