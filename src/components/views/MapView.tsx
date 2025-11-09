@@ -76,7 +76,12 @@ export const MapView: React.FC = () => {
   const [projectDetailTask, setProjectDetailTask] = useState<Task | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [fabExpanded, setFabExpanded] = useState(false);
-  const [showDailyTodoSidebar, setShowDailyTodoSidebar] = useState(true);
+  
+  // Use localStorage to persist the sidebar visibility state
+  const [showDailyTodoSidebar, setShowDailyTodoSidebar] = useState(() => {
+    const saved = localStorage.getItem('showDailyTodoSidebar');
+    return saved !== null ? saved === 'true' : true;
+  });
 
   // Reset daily planning mode when leaving MapView
   React.useEffect(() => {
@@ -91,8 +96,8 @@ export const MapView: React.FC = () => {
   React.useEffect(() => {
     if (currentView !== 'map') {
       setShowDailyTodoSidebar(false);
+      localStorage.setItem('showDailyTodoSidebar', 'false');
     }
-    // Don't show it again when coming back to map view
   }, [currentView]);
 
   // Create all nodes - memoized to prevent unnecessary recreation
