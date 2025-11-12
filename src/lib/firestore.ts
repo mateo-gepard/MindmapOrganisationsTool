@@ -45,10 +45,20 @@ export const firestoreTasks = {
     
     return onSnapshot(q, 
       (snapshot) => {
-        const tasks = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Task[];
+        const tasks = snapshot.docs.map(doc => {
+          const data = doc.data();
+          
+          // Convert Firebase Timestamps to JavaScript Dates
+          const task: Task = {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate?.() || data.createdAt,
+            dueDate: data.dueDate?.toDate?.() || data.dueDate,
+            completedAt: data.completedAt?.toDate?.() || data.completedAt,
+          } as Task;
+          
+          return task;
+        });
         
         // Log what changed
         const changes = snapshot.docChanges();
