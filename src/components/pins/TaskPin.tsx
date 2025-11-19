@@ -70,6 +70,7 @@ export const TaskPin: React.FC<PinProps> = ({ task }) => {
     }
   }, [task.id]);
 
+  const isCollaborativeProject = task.type === 'large' && Array.isArray(task.collaborators) && task.collaborators.length > 0;
   return (
     <div 
       className="flex flex-col items-center cursor-grab active:cursor-grabbing group select-none" 
@@ -89,7 +90,7 @@ export const TaskPin: React.FC<PinProps> = ({ task }) => {
             isDragging 
               ? 'scale-125 shadow-2xl' 
               : 'group-hover:scale-110 group-hover:shadow-lg transition-transform duration-200 ease-out'
-          }`}
+          } ${isCollaborativeProject ? 'ring-4 ring-purple-500 ring-offset-2' : ''}`}
           style={{ 
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',

@@ -146,6 +146,20 @@ export const firestoreTaskDetails = {
       snapshot.docs.forEach(doc => {
         const data = doc.data() as TaskDetail & { userId: string };
         const { userId, ...taskDetail } = data;
+        // Convert milestone.targetDate to Date if needed
+        if (Array.isArray(taskDetail.milestones)) {
+          taskDetail.milestones = taskDetail.milestones.map(milestone => {
+            let dateValue = milestone.targetDate;
+            // Firestore Timestamp objects have a toDate method, native Date objects do not
+            if (dateValue && typeof dateValue === 'object' && 'toDate' in dateValue && typeof dateValue.toDate === 'function') {
+              dateValue = dateValue.toDate();
+            }
+            return {
+              ...milestone,
+              targetDate: dateValue
+            };
+          });
+        }
         details[taskDetail.taskId] = taskDetail;
       });
       callback(details);
