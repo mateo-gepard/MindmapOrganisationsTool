@@ -70,7 +70,7 @@ export const TaskPin: React.FC<PinProps> = ({ task }) => {
     }
   }, [task.id]);
 
-  const isCollaborativeProject = task.type === 'large' && Array.isArray(task.collaborators) && task.collaborators.length > 0;
+  const isCollaborativeProject = task.type === 'large' && Array.isArray(task.collaborators) && task.collaborators.filter(c => !!c && c.trim() !== '').length > 0;
   return (
     <div 
       className="flex flex-col items-center cursor-grab active:cursor-grabbing group select-none" 
