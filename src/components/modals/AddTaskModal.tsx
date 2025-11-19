@@ -14,6 +14,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose }) => {
   const [priority, setPriority] = useState<Priority>('medium');
   const [selectedAreas, setSelectedAreas] = useState<AreaId[]>(['school']);
   const [dueDate, setDueDate] = useState('');
+  const [collaborators, setCollaborators] = useState('');
   
   // Recurrence settings for repetitive tasks
   const [recurrenceInterval, setRecurrenceInterval] = useState<'daily' | 'weekly' | 'monthly'>('daily');
@@ -59,6 +60,10 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose }) => {
         areas: selectedAreas,
         position,
         isHybrid: selectedAreas.length > 1,
+        collaborators: collaborators
+          .split(',')
+          .map((c) => c.trim())
+          .filter((c) => c.length > 0),
       };
 
       // Only add dueDate if it has a value
@@ -100,6 +105,19 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Collaborators */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Collaborators (comma-separated usernames)
+                      </label>
+                      <input
+                        type="text"
+                        value={collaborators}
+                        onChange={(e) => setCollaborators(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="e.g. roman, mateo"
+                      />
+                    </div>
           {/* Title */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

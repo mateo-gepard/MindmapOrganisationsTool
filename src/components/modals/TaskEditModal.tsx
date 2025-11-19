@@ -28,6 +28,7 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose }) =
   const [priority, setPriority] = useState<Priority>(task.priority);
   const [selectedAreas, setSelectedAreas] = useState<AreaId[]>(task.areas);
   const [dueDate, setDueDate] = useState(toISODateString(task.dueDate));
+  const [collaborators, setCollaborators] = useState<string>(task.collaborators ? task.collaborators.join(", ") : "");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +40,7 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose }) =
       areas: selectedAreas,
       dueDate: dueDate ? new Date(dueDate) : undefined,
       isHybrid: selectedAreas.length > 1,
+      collaborators: collaborators.split(",").map(c => c.trim()).filter(Boolean),
     });
     
     onClose();
@@ -76,6 +78,19 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose }) =
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                    {/* Collaborators */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Collaboratoren (kommagetrennt)
+                      </label>
+                      <input
+                        type="text"
+                        value={collaborators}
+                        onChange={e => setCollaborators(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="z.B. roman, mateo"
+                      />
+                    </div>
           {/* Title */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

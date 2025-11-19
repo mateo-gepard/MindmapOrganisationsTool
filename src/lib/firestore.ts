@@ -37,17 +37,14 @@ export const firestoreTasks = {
     const userId = getCurrentUserId();
     const q = query(
       collection(db, TASKS_COLLECTION),
-      where('userId', '==', userId),
+      // Firestore does not support OR queries directly, so we fetch all tasks and filter client-side
       orderBy('createdAt', 'desc')
     );
-    
     console.log('🔄 Firebase: Starting real-time task subscription...');
-    
     return onSnapshot(q, 
       (snapshot) => {
         const tasks = snapshot.docs.map(doc => {
           const data = doc.data();
-          
           // Convert Firebase Timestamps to JavaScript Dates
           const task: Task = {
             id: doc.id,
@@ -56,10 +53,12 @@ export const firestoreTasks = {
             dueDate: data.dueDate?.toDate?.() || data.dueDate,
             completedAt: data.completedAt?.toDate?.() || data.completedAt,
           } as Task;
-          
           return task;
-        });
-        
+        })
+        // Filter tasks: show if user is owner or collaborator
+        .filter(task =>
+          task.userId === userId || (Array.isArray(task.collaborators) && task.collaborators.includes(userId))
+        );
         // Log what changed
         const changes = snapshot.docChanges();
         if (changes.length > 0) {
@@ -75,13 +74,11 @@ export const firestoreTasks = {
             }
           });
         }
-        
         console.log(`📊 Firebase: Loaded ${tasks.length} tasks (${changes.length} changes)`);
         callback(tasks);
       },
       (error) => {
         console.error('❌ Firebase tasks subscription error:', error);
-        // Provide empty array on error to prevent app crash
         callback([]);
       }
     );

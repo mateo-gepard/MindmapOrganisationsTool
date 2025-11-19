@@ -19,6 +19,7 @@ export interface Area {
 // Core Task interface
 export interface Task {
   id: string;
+  userId: string;
   title: string;
   type: TaskType;
   priority: Priority;
@@ -36,6 +37,9 @@ export interface Task {
     dayOfMonth?: number; // For monthly: 1-31
   };
   lastCompletedAt?: Date; // Track last completion for repetitive tasks
+
+  // Collaboration
+  collaborators?: string[]; // Usernames of collaborators
 }
 
 // Extended details for large/project tasks
