@@ -36,6 +36,12 @@ function App() {
     initializeFirebase();
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('mindmap-username');
+    setCurrentUser("");
+    setShowLogin(true);
+  };
+
   if (showLogin) {
     return <LoginModal onLogin={handleLogin} />;
   }
@@ -54,8 +60,17 @@ function App() {
             Mindmap
           </h1>
           {currentUser && (
-            <div className="ml-4 px-3 py-1 bg-blue/20 rounded-lg">
-              <span className="text-sm font-medium text-navy">👤 {currentUser}</span>
+            <div className="ml-4 flex items-center gap-2">
+              <div className="px-3 py-1 bg-blue/20 rounded-lg">
+                <span className="text-sm font-medium text-navy">👤 {currentUser}</span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="px-2 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 text-xs font-semibold ml-2"
+                title="Logout"
+              >
+                Logout
+              </button>
             </div>
           )}
         </div>
