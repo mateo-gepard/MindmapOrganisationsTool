@@ -6,7 +6,7 @@ interface LoginModalProps {
 
 export default function LoginModal({ onLogin }: LoginModalProps) {
   const [username, setUsername] = useState('Mateo');
-  const users = ['Mateo', 'roman', 'george'];
+  const users = ['Mateo', 'roman', 'george', 'Juan'];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +43,7 @@ export default function LoginModal({ onLogin }: LoginModalProps) {
           </button>
         </form>
         <p className="mt-4 text-sm text-[#003049] text-center">
-          Default users: Mateo, roman, george
+          Default users: Mateo, roman, george, Juan
         </p>
       </div>
     </div>
