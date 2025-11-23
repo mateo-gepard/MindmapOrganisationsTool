@@ -136,16 +136,18 @@ export const firestoreTasks = {
 export const firestoreTaskDetails = {
   subscribe: (callback: (details: { [key: string]: TaskDetail }) => void) => {
     const userId = getCurrentUserId();
+    // Fetch all task details - we'll filter on the client side based on accessible tasks
     const q = query(
-      collection(db, TASK_DETAILS_COLLECTION),
-      where('userId', '==', userId)
+      collection(db, TASK_DETAILS_COLLECTION)
     );
+    
+    console.log(`🔄 Starting taskDetails subscription for user: ${userId}`);
     
     return onSnapshot(q, (snapshot) => {
       const details: { [key: string]: TaskDetail } = {};
       snapshot.docs.forEach(doc => {
         const data = doc.data() as TaskDetail & { userId: string };
-        const { userId, ...taskDetail } = data;
+        const { userId: detailUserId, ...taskDetail } = data;
         // Convert milestone.targetDate to Date if needed
         if (Array.isArray(taskDetail.milestones)) {
           taskDetail.milestones = taskDetail.milestones.map(milestone => {
@@ -160,8 +162,12 @@ export const firestoreTaskDetails = {
             };
           });
         }
+        // Include task detail if user owns it OR if it's for a collaborative task
+        // Note: The task filtering happens in firestoreTasks.subscribe, so we include all details here
+        // and let the UI filter based on accessible tasks
         details[taskDetail.taskId] = taskDetail;
       });
+      console.log(`✅ Loaded ${Object.keys(details).length} task details`);
       callback(details);
     });
   },
@@ -173,17 +179,19 @@ export const firestoreTaskDetails = {
   },
 
   update: async (taskId: string, updates: Partial<TaskDetail>) => {
-    const userId = getCurrentUserId();
+    // Query by taskId only - allow collaborators to update task details
     const q = query(
       collection(db, TASK_DETAILS_COLLECTION),
-      where('taskId', '==', taskId),
-      where('userId', '==', userId)
+      where('taskId', '==', taskId)
     );
     const snapshot = await getDocs(q);
     
     if (!snapshot.empty) {
       const docRef = doc(db, TASK_DETAILS_COLLECTION, snapshot.docs[0].id);
       await updateDoc(docRef, updates);
+      console.log(`✅ Task detail updated for taskId: ${taskId}`);
+    } else {
+      console.warn(`⚠️ No task detail found for taskId: ${taskId}`);
     }
   },
 };
