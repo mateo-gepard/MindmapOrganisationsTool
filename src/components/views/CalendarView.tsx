@@ -5,6 +5,7 @@ import type { Task } from '../../types';
 export const CalendarView: React.FC = () => {
   const { tasks, taskDetails } = useAppStore();
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
   // Get all days in the current month view (including padding from prev/next month)
   const monthDays = useMemo(() => {
@@ -158,11 +159,13 @@ export const CalendarView: React.FC = () => {
             const isTodayDay = isToday(day);
             const inCurrentMonth = isCurrentMonth(day);
             const totalItems = tasksForDay.length + milestonesForDay.length;
+            const MAX_VISIBLE_ITEMS = 5;
 
             return (
               <div
                 key={day.toISOString()}
-                className={`bg-white rounded border p-2 min-h-[100px] ${
+                onClick={() => setSelectedDay(day)}
+                className={`bg-white rounded border p-2 min-h-[100px] cursor-pointer transition-all hover:shadow-lg ${
                   isTodayDay
                     ? 'border-2 border-blue-500 shadow-md'
                     : inCurrentMonth
@@ -191,7 +194,7 @@ export const CalendarView: React.FC = () => {
 
                 <div className="space-y-1">
                   {/* Deadlines */}
-                  {tasksForDay.slice(0, 3).map((task) => (
+                  {tasksForDay.slice(0, Math.min(MAX_VISIBLE_ITEMS, tasksForDay.length)).map((task) => (
                     <div
                       key={task.id}
                       className={`text-[10px] p-1.5 rounded border-l-2 ${getPriorityColor(task.priority)}`}
@@ -201,20 +204,22 @@ export const CalendarView: React.FC = () => {
                   ))}
 
                   {/* Milestones */}
-                  {milestonesForDay.slice(0, 3 - tasksForDay.length).map((milestone, idx) => (
-                    <div
-                      key={idx}
-                      className="text-[10px] p-1.5 rounded bg-purple-50 border-l-2 border-purple-500"
-                    >
-                      <div className="font-medium text-purple-900 line-clamp-1">
-                        🏁 {milestone.milestoneTitle}
+                  {milestonesForDay
+                    .slice(0, Math.max(0, MAX_VISIBLE_ITEMS - tasksForDay.length))
+                    .map((milestone, idx) => (
+                      <div
+                        key={idx}
+                        className="text-[10px] p-1.5 rounded bg-purple-50 border-l-2 border-purple-500"
+                      >
+                        <div className="font-medium text-purple-900 line-clamp-1">
+                          🏁 {milestone.milestoneTitle}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
 
-                  {totalItems > 3 && (
-                    <div className="text-[9px] text-gray-500 italic px-1.5">
-                      +{totalItems - 3} weitere
+                  {totalItems > MAX_VISIBLE_ITEMS && (
+                    <div className="text-[10px] text-gray-600 font-medium px-1.5 pt-1">
+                      and {totalItems - MAX_VISIBLE_ITEMS} more
                     </div>
                   )}
                 </div>
@@ -242,6 +247,119 @@ export const CalendarView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Day Detail Modal */}
+      {selectedDay && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={() => setSelectedDay(null)}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto m-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 z-10">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-bold">
+                    {selectedDay.toLocaleDateString('de-DE', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </h2>
+                  <p className="text-blue-100 text-sm mt-1">
+                    {getTasksForDay(selectedDay).length} Aufgaben · {getMilestonesForDay(selectedDay).length} Meilensteine
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSelectedDay(null)}
+                  className="text-white hover:text-blue-100 text-2xl"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Tasks Section */}
+              {getTasksForDay(selectedDay).length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <span>📅</span> Aufgaben mit Deadline
+                  </h3>
+                  <div className="space-y-2">
+                    {getTasksForDay(selectedDay).map((task) => (
+                      <div
+                        key={task.id}
+                        className={`p-4 rounded-lg border-l-4 ${getPriorityColor(task.priority)}`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-gray-900">{task.title}</h4>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+                                {task.type}
+                              </span>
+                              <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700 capitalize">
+                                {task.priority} Priorität
+                              </span>
+                              {task.areas.map((area) => (
+                                <span
+                                  key={area}
+                                  className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700"
+                                >
+                                  {area}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Milestones Section */}
+              {getMilestonesForDay(selectedDay).length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <span>🏁</span> Meilensteine
+                  </h3>
+                  <div className="space-y-2">
+                    {getMilestonesForDay(selectedDay).map((milestone, idx) => (
+                      <div
+                        key={idx}
+                        className="p-4 rounded-lg bg-purple-50 border-l-4 border-purple-500"
+                      >
+                        <div className="flex items-start gap-3">
+                          <span className="text-2xl">🏁</span>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-purple-900">{milestone.milestoneTitle}</h4>
+                            <p className="text-sm text-purple-700 mt-1">
+                              Projekt: {milestone.taskTitle}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Empty State */}
+              {getTasksForDay(selectedDay).length === 0 && getMilestonesForDay(selectedDay).length === 0 && (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">📅</div>
+                  <p className="text-gray-500 text-lg">Keine Ereignisse an diesem Tag</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
