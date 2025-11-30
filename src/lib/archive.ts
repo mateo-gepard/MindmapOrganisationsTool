@@ -13,12 +13,7 @@ export const createDailySnapshot = async (
     userId,
     timestamp: new Date(),
     type: 'manual',
-    tasks: tasks.map(task => ({
-      ...task,
-      createdAt: task.createdAt,
-      dueDate: task.dueDate,
-      completedAt: task.completedAt,
-    })),
+    tasks: tasks.map(task => cleanTaskForFirestore(task)),
     taskDetails: taskDetailsObj,
     dailyTodos,
   };
@@ -48,6 +43,31 @@ const ARCHIVE_COLLECTION = 'archives';
 const getCurrentUserId = () => {
   const username = localStorage.getItem('mindmap-username');
   return username || 'Mateo';
+};
+
+// Clean task by removing undefined values (Firestore doesn't support undefined)
+const cleanTaskForFirestore = (task: Task): any => {
+  const cleaned: any = {
+    ...task,
+    createdAt: task.createdAt,
+  };
+  
+  // Only add optional fields if they have values
+  if (task.dueDate) cleaned.dueDate = task.dueDate;
+  if (task.completedAt) cleaned.completedAt = task.completedAt;
+  if (task.lastCompletedAt) cleaned.lastCompletedAt = task.lastCompletedAt;
+  if (task.position) cleaned.position = task.position;
+  if (task.recurrence) cleaned.recurrence = task.recurrence;
+  if (task.collaborators && task.collaborators.length > 0) cleaned.collaborators = task.collaborators;
+  
+  // Remove undefined values
+  Object.keys(cleaned).forEach(key => {
+    if (cleaned[key] === undefined) {
+      delete cleaned[key];
+    }
+  });
+  
+  return cleaned;
 };
 
 // Check if we should create a backup (morning: 6-10 AM, evening: 6-10 PM)
@@ -122,12 +142,7 @@ export const createBackup = async (
     userId,
     timestamp: new Date(),
     type: backupType,
-    tasks: tasks.map(task => ({
-      ...task,
-      createdAt: task.createdAt,
-      dueDate: task.dueDate,
-      completedAt: task.completedAt,
-    })),
+    tasks: tasks.map(task => cleanTaskForFirestore(task)),
     taskDetails: taskDetailsObj,
     dailyTodos,
   };
