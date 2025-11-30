@@ -9,7 +9,7 @@ import type {
   Area,
 } from '../types';
 import { firestoreTasks, firestoreTaskDetails, firestoreUserData } from '../lib/firestore';
-import { triggerAutoBackup } from '../lib/archive';
+import { triggerAutoBackup, createDailySnapshot } from '../lib/archive';
 import { archiveCompletedTask } from '../lib/completedTasksArchive';
 
 interface AppState {
@@ -68,6 +68,9 @@ interface AppState {
   addTimeBlock: (block: Omit<TimeBlock, 'id'>) => void;
   updateTimeBlock: (id: string, updates: Partial<TimeBlock>) => void;
   deleteTimeBlock: (id: string) => void;
+
+  // Snapshot operations
+  createSnapshot: () => Promise<void>;
 
   // Firebase initialization
   initializeFirebase: () => void;
@@ -612,6 +615,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     set((state) => ({
       timeBlocks: state.timeBlocks.filter((block) => block.id !== id),
     })),
+
+  // Snapshot operations
+  createSnapshot: async () => {
+    const state = get();
+    await createDailySnapshot(state.tasks, state.taskDetails, state.dailyTodos);
+  },
 
   // Initialize Firebase listeners
   initializeFirebase: () => {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getBackupHistory, restoreFromBackup, createDailySnapshot } from '../../lib/archive';
+import { getBackupHistory, restoreFromBackup } from '../../lib/archive';
 import { useAppStore } from '../../stores/firebaseStore';
 import type { ArchiveSnapshot } from '../../types';
 
@@ -9,7 +9,7 @@ interface ArchiveModalProps {
 }
 
 export default function ArchiveModal({ onClose, onRestore }: ArchiveModalProps) {
-  const { tasks, taskDetails, dailyTodos } = useAppStore();
+  const { createSnapshot } = useAppStore();
   const [backups, setBackups] = useState<ArchiveSnapshot[]>([]);
   const [loading, setLoading] = useState(true);
   const [restoring, setRestoring] = useState<string | null>(null);
@@ -57,7 +57,7 @@ export default function ArchiveModal({ onClose, onRestore }: ArchiveModalProps) 
   const handleCreateSnapshot = async () => {
     setCreatingSnapshot(true);
     try {
-      await createDailySnapshot(tasks, taskDetails, dailyTodos);
+      await createSnapshot();
       alert('✅ Snapshot erfolgreich erstellt!');
       await loadBackups(); // Reload to show new snapshot
     } catch (error) {
