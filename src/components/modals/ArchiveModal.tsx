@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getBackupHistory, restoreFromBackup } from '../../lib/archive';
+import { getBackupHistory, restoreFromBackup, createDailySnapshot } from '../../lib/archive';
+import { useAppStore } from '../../stores/firebaseStore';
 import type { ArchiveSnapshot } from '../../types';
 
 interface ArchiveModalProps {
@@ -8,9 +9,11 @@ interface ArchiveModalProps {
 }
 
 export default function ArchiveModal({ onClose, onRestore }: ArchiveModalProps) {
+  const { tasks, taskDetails, dailyTodos } = useAppStore();
   const [backups, setBackups] = useState<ArchiveSnapshot[]>([]);
   const [loading, setLoading] = useState(true);
   const [restoring, setRestoring] = useState<string | null>(null);
+  const [creatingSnapshot, setCreatingSnapshot] = useState(false);
 
   useEffect(() => {
     loadBackups();
@@ -51,6 +54,20 @@ export default function ArchiveModal({ onClose, onRestore }: ArchiveModalProps) 
     }
   };
 
+  const handleCreateSnapshot = async () => {
+    setCreatingSnapshot(true);
+    try {
+      await createDailySnapshot(tasks, taskDetails, dailyTodos);
+      alert('✅ Snapshot erfolgreich erstellt!');
+      await loadBackups(); // Reload to show new snapshot
+    } catch (error) {
+      console.error('Error creating snapshot:', error);
+      alert('❌ Fehler beim Erstellen des Snapshots');
+    } finally {
+      setCreatingSnapshot(false);
+    }
+  };
+
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('de-DE', {
       weekday: 'short',
@@ -62,11 +79,13 @@ export default function ArchiveModal({ onClose, onRestore }: ArchiveModalProps) 
     }).format(date);
   };
 
-  const getTypeIcon = (type: 'morning' | 'evening') => {
+  const getTypeIcon = (type: 'morning' | 'evening' | 'manual') => {
+    if (type === 'manual') return '📸';
     return type === 'morning' ? '☀️' : '🌙';
   };
 
-  const getTypeLabel = (type: 'morning' | 'evening') => {
+  const getTypeLabel = (type: 'morning' | 'evening' | 'manual') => {
+    if (type === 'manual') return 'Manueller Snapshot';
     return type === 'morning' ? 'Morgens' : 'Abends';
   };
 
@@ -76,20 +95,35 @@ export default function ArchiveModal({ onClose, onRestore }: ArchiveModalProps) 
         {/* Header */}
         <div className="p-6 border-b border-[#669bbc]/30">
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-[#780000] flex items-center gap-3">
-              <span className="text-3xl">📦</span>
-              Archiv & Backups
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-[#003049]/60 hover:text-[#c1121f] text-2xl transition-colors"
-            >
-              ✕
-            </button>
+            <div>
+              <h2 className="text-2xl font-bold text-[#780000] flex items-center gap-3">
+                <span className="text-3xl">📦</span>
+                Archiv & Backups
+              </h2>
+              <p className="text-sm text-[#003049]/70 mt-2">
+                Automatische Backups: Morgens (6-10 Uhr) und Abends (18-22 Uhr)
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleCreateSnapshot}
+                disabled={creatingSnapshot}
+                className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                  creatingSnapshot
+                    ? 'bg-gray-300 text-gray-500 cursor-wait'
+                    : 'bg-gradient-to-r from-[#c1121f] to-[#780000] text-white hover:shadow-lg hover:shadow-[#c1121f]/30 hover:scale-105'
+                }`}
+              >
+                {creatingSnapshot ? '⏳ Erstelle...' : '📸 Snapshot erstellen'}
+              </button>
+              <button
+                onClick={onClose}
+                className="text-[#003049]/60 hover:text-[#c1121f] text-2xl transition-colors"
+              >
+                ✕
+              </button>
+            </div>
           </div>
-          <p className="text-sm text-[#003049]/70 mt-2">
-            Automatische Backups: Morgens (6-10 Uhr) und Abends (18-22 Uhr)
-          </p>
         </div>
 
         {/* Content */}

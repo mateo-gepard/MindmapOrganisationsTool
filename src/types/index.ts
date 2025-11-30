@@ -106,7 +106,7 @@ export interface ArchiveSnapshot {
   id: string;
   userId: string;
   timestamp: Date;
-  type: 'morning' | 'evening'; // Two backups per day
+  type: 'morning' | 'evening' | 'manual'; // Two backups per day + manuelle Snapshots
   tasks: Task[];
   taskDetails: { [key: string]: TaskDetail };
   dailyTodos: string[];

@@ -1,3 +1,34 @@
+// Erstelle einen vollständigen Snapshot (unabhängig von Zeit und Typ)
+export const createDailySnapshot = async (
+  tasks: Task[],
+  taskDetails: Map<string, TaskDetail>,
+  dailyTodos: string[]
+): Promise<void> => {
+  const userId = getCurrentUserId();
+  const taskDetailsObj: { [key: string]: TaskDetail } = {};
+  taskDetails.forEach((detail, taskId) => {
+    taskDetailsObj[taskId] = detail;
+  });
+  const snapshot: Omit<ArchiveSnapshot, 'id'> = {
+    userId,
+    timestamp: new Date(),
+    type: 'manual',
+    tasks: tasks.map(task => ({
+      ...task,
+      createdAt: task.createdAt,
+      dueDate: task.dueDate,
+      completedAt: task.completedAt,
+    })),
+    taskDetails: taskDetailsObj,
+    dailyTodos,
+  };
+  try {
+    const docRef = await addDoc(collection(db, ARCHIVE_COLLECTION), snapshot);
+    console.log(`✅ MANUAL snapshot created successfully:`, docRef.id);
+  } catch (error) {
+    console.error('❌ Error creating manual snapshot:', error);
+  }
+};
 import { 
   collection, 
   addDoc, 
